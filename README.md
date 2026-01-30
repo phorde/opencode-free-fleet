@@ -32,9 +32,21 @@ Only models with proven benchmark performance (SOTA) are included in Elite tier.
 
 ## Installation
 
-### From npm (Recommended)
+### From local files (Recommended)
 
-Add to your `~/.config/opencode/opencode.json`:
+Clone and place in `~/.config/opencode/plugins/`:
+
+```bash
+# Clone from GitHub
+git clone https://github.com/phorde/opencode-free-fleet.git ~/.config/opencode/plugins/opencode-free-fleet
+
+# Or from local directory
+npm install file:~/Projetos/opencode-free-fleet
+```
+
+### From npm (Coming Soon)
+
+After publishing to npm, you can add to your `~/.config/opencode/opencode.json`:
 
 ```jsonc
 {
@@ -44,14 +56,7 @@ Add to your `~/.config/opencode/opencode.json`:
 }
 ```
 
-### From local files
-
-Clone and place in `~/.config/opencode/plugins/`:
-
-```bash
-cd ~/.config/opencode/plugins
-git clone https://github.com/phorde/opencode-free-fleet.git
-```
+**Note:** This plugin is currently in development. Install from local files for the latest features.
 
 ## Usage
 
