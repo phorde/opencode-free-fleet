@@ -15,10 +15,10 @@ vi.mock('fs/promises', () => ({
 
 describe('Scout', () => {
   let scout: Scout;
-  const mockFs = await import('fs/promises');
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    const mockFs = await import('fs/promises');
     scout = createScout({
       antigravityPath: '/mock/path/antigravity-accounts.json',
       opencodeConfigPath: '/mock/path/oh-my-opencode.json'

@@ -145,7 +145,7 @@ export class FreeModelRacer {
       // Check if race was externally aborted
       if (err.name === 'AbortError') {
         console.log(`🛑 Racer: Race '${raceId}' externally aborted`);
-        throw new Error(`Race '${raceId}' was aborted`);
+        throw new Error(`was aborted`);
       }
 
       throw err;
