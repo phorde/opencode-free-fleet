@@ -1,7 +1,7 @@
 {
   "name": "opencode-free-fleet",
   "version": "0.3.0",
-  "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - Automatically ranks and competes free LLM models by benchmark performance",
+  "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - v0.3.0 (Clean Build)",
   "author": {
     "name": "Phorde",
     "email": "consultorio@phorde.com.br"
@@ -65,8 +65,7 @@
     "multi-provider",
     "metadata-oracle",
     "75+ providers",
-    "omni-scout",
-    "v0.3.0",
-    "v0.3.1"
+    "clean-build",
+    "v0.3.0"
   ]
 }
