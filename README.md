@@ -490,3 +490,11 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 **Made with ❤️ by [Phorde](mailto:phorde@hotmail.com)**
 
 **Repository:** https://github.com/phorde/opencode-free-fleet
+
+---
+
+> Q. 1. What is the chief end of man?
+>
+> A. Man’s chief end is to glorify God, and to enjoy him for ever.
+>
+> _1 Cor. 10:31; Rom. 11:36; Ps. 73:25-28._
