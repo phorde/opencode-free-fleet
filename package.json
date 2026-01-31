@@ -1,6 +1,6 @@
 {
   "name": "opencode-free-fleet",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - Automatically ranks and competes free LLM models by benchmark performance",
   "author": {
     "name": "Phorde",
@@ -61,6 +61,12 @@
     "economic-load-balancing",
     "zero-cost",
     "benchmark-performance",
-    "sota"
+    "sota",
+    "multi-provider",
+    "metadata-oracle",
+    "75+ providers",
+    "omni-scout",
+    "v0.3.0",
+    "v0.3.1"
   ]
 }
