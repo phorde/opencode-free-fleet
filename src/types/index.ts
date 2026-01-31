@@ -4,6 +4,12 @@
  * Simplified types to fix compilation errors
  */
 
+export type CostTier =
+  | "CONFIRMED_FREE"
+  | "FREEMIUM_LIMITED"
+  | "UNKNOWN"
+  | "CONFIRMED_PAID";
+
 /**
  * Unified free model interface (provider-agnostic)
  */
@@ -22,7 +28,8 @@ export interface FreeModel {
   isFree: boolean;
   isElite: boolean;
   category: ModelCategory;
-  confidence?: number; // Added for compatibility with Scout
+  confidence: number;
+  tier: CostTier;
 }
 
 /**

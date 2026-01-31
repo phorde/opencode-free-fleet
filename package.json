@@ -1,6 +1,6 @@
 {
   "name": "opencode-free-fleet",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "Economic Load Balancing, Task Delegation, and Zero-Cost Model Discovery for OpenCode - v0.4.0",
   "keywords": [
     "opencode",
@@ -25,9 +25,12 @@
     "name": "Phorde",
     "email": "phorde@hotmail.com"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@opencode-ai/plugin": "^1.1.48",
     "@types/node": "^20.11.5",
     "@typescript-eslint/eslint-plugin": "8.47.0",
     "@typescript-eslint/parser": "8.47.0",

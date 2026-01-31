@@ -1,5 +1,5 @@
 import type { ModelMetrics, SessionMetrics } from "../types/index.js";
-import * as fs from "fs";
+import { PersistenceManager } from "./persistence.js";
 import * as path from "path";
 import * as os from "os";
 
@@ -129,10 +129,6 @@ export class MetricsEngine {
 
   private saveToDisk(): void {
     try {
-      if (!fs.existsSync(this.METRICS_DIR)) {
-        fs.mkdirSync(this.METRICS_DIR, { recursive: true });
-      }
-
       const metricsPath = path.join(this.METRICS_DIR, this.METRICS_FILE);
       const data = {
         session: this.getSessionMetrics(),
@@ -140,7 +136,7 @@ export class MetricsEngine {
         lastUpdated: new Date().toISOString(),
       };
 
-      fs.writeFileSync(metricsPath, JSON.stringify(data, null, 2));
+      PersistenceManager.writeJSON(metricsPath, data);
     } catch (error) {
       console.warn(`MetricsEngine: Failed to save metrics to disk: ${error}`);
     }
@@ -149,15 +145,9 @@ export class MetricsEngine {
   private loadHistoricalMetrics(): void {
     try {
       const metricsPath = path.join(this.METRICS_DIR, this.METRICS_FILE);
+      const parsed = PersistenceManager.readJSON<any>(metricsPath);
 
-      if (!fs.existsSync(metricsPath)) {
-        return;
-      }
-
-      const data = fs.readFileSync(metricsPath, "utf-8");
-      const parsed = JSON.parse(data);
-
-      if (parsed.models) {
+      if (parsed && parsed.models) {
         for (const [modelId, metrics] of Object.entries(parsed.models)) {
           const typed = metrics as ModelMetrics;
           typed.lastUsed = new Date(typed.lastUsed);
