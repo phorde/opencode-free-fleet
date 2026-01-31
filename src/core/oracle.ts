@@ -368,11 +368,15 @@ export class MetadataOracle {
     const isDaemonAvailable = await DaemonClient.isAvailable();
     if (isDaemonAvailable) {
       console.log(`🔮 Metadata Oracle: Delegating to Fleet Daemon...`);
-      const daemonMeta = await DaemonClient.getMetadata(modelId);
-      if (daemonMeta) {
-        this.persistentCache.set(modelId, daemonMeta);
-        this._saveCache();
-        return daemonMeta;
+      try {
+        const daemonMeta = await DaemonClient.getMetadata(modelId);
+        if (daemonMeta) {
+          this.persistentCache.set(modelId, daemonMeta);
+          this._saveCache();
+          return daemonMeta;
+        }
+      } catch (error) {
+        console.warn(`⚠️  Metadata Oracle: Daemon fetch failed: ${error}`);
       }
     }
 
@@ -495,7 +499,11 @@ export class MetadataOracle {
     };
 
     this.persistentCache.set(modelId, result);
-    this._saveCache();
+    try {
+      this._saveCache();
+    } catch (error) {
+      console.warn(`⚠️  Metadata Oracle: Failed to save cache: ${error}`);
+    }
 
     return result;
   }
