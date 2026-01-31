@@ -1,7 +1,7 @@
 {
   "name": "opencode-free-fleet",
   "version": "0.4.0",
-  "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - v0.4.0 Release",
+  "description": "Economic Load Balancing, Task Delegation, and Zero-Cost Model Discovery for OpenCode - v0.4.0",
   "keywords": [
     "opencode",
     "llm",
@@ -17,10 +17,13 @@
     "zero-config",
     "live-updates",
     "ultra-free-mode",
+    "task-delegation",
+    "metrics",
     "v0.4.0"
   ],
-  "dependencies": {
-    "@opencode-ai/plugin": "^1.1.0"
+  "author": {
+    "name": "Phorde",
+    "email": "phorde@hotmail.com"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -41,22 +44,5 @@
     "test": "bun test",
     "publish": "bun publish --access public",
     "prepublishOnly": "bun run build"
-  },
-  "keywords": [
-    "opencode",
-    "llm",
-    "free-models",
-    "model-discovery",
-    "economic-load-balancing",
-    "zero-cost",
-    "benchmark-performance",
-    "sota",
-    "multi-provider",
-    "metadata-oracle",
-    "75+ providers",
-    "zero-config",
-    "live-updates",
-    "ultra-free-mode",
-    "v0.3.0"
-  ]
+  }
 }
