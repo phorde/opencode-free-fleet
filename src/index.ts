@@ -17,6 +17,8 @@ export { VERSION, BUILD_DATE } from "./version.js";
 // Export types
 export * from "./types/index.js";
 
+export { blockedCommand, blockedExportCommand } from "./commands/blocked.js";
+
 // Export core modules
 export { Scout, createScout } from "./core/scout.js";
 export {
@@ -593,6 +595,47 @@ export const FreeFleetPlugin: Plugin = async (
             extra: { transparentMode: args.enabled },
           });
           return { success: true, transparentMode: args.enabled };
+        },
+      },
+
+      free_fleet_blocked: {
+        description: "Show models blocked in ultra_free mode",
+        args: {
+          limit: {
+            type: "number",
+            description: "Number of recent blocks to show (default: 50)",
+            optional: true,
+          },
+          format: {
+            type: "string",
+            description: "Output format: text, json, csv",
+            optional: true,
+          },
+        },
+        execute: async (args: any) => {
+          const { blockedCommand } = await import("./commands/blocked.js");
+          await blockedCommand([
+            args.limit ? `--limit=${args.limit}` : "",
+            args.format ? `--format=${args.format}` : "",
+          ]);
+          return { success: true };
+        },
+      },
+
+      free_fleet_export_blocks: {
+        description: "Export blocked models data for analysis",
+        args: {
+          format: {
+            type: "string",
+            description: "Export format: json or csv",
+            required: true,
+          },
+        },
+        execute: async (args: any) => {
+          const { blockedExportCommand } =
+            await import("./commands/blocked.js");
+          await blockedExportCommand([`--format=${args.format}`]);
+          return { success: true };
         },
       },
     },

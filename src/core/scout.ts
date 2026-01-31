@@ -32,6 +32,16 @@ import {
 } from "./oracle.js";
 
 /**
+ * Strict Validator for Ultra Free mode
+ */
+import { StrictValidator, type AuditEvent } from "./validator.js";
+
+/**
+ * Audit Logger
+ */
+import { AuditLogger } from "./audit.js";
+
+/**
  * Default scout configuration
  */
 const DEFAULT_CONFIG: ScoutConfig = {
@@ -297,14 +307,16 @@ export class Scout {
           });
         }
 
-        // Apply blocklist filter (for metadata filtering)
         const blocklist = await this.buildBlocklist();
         const filteredModels = enrichedModels.filter((model) => {
           const isBlocked = blocklist.has(model.provider);
-          if (isBlocked) return false;
+          if (isBlocked) {
+            return false;
+          }
 
           if (this.config.ultraFreeMode) {
-            return model.tier === "CONFIRMED_FREE" && model.confidence >= 0.9;
+            const validation = StrictValidator.isUltraFreeSafe(model);
+            return validation.isSafe;
           }
 
           return true;
