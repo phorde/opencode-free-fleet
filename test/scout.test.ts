@@ -182,10 +182,10 @@ describe('Scout (v0.2.0)', () => {
   describe('filterBlockedModels', () => {
     it('should filter out models from blocked providers', async () => {
       const mockModels: FreeModel[] = [
-        { id: 'deepseek/deepseek-v3', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'google/gemini-pro', provider: 'google', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'openai/gpt-4', provider: 'openai', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'gemini/gemini-flash', provider: 'gemini', pricing: { prompt: '0', completion: '0', request: '0' } as any
+        { id: 'deepseek/deepseek-v3', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'google/gemini-pro', provider: 'google', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'openai/gpt-4', provider: 'openai', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'gemini/gemini-flash', provider: 'gemini', pricing: { prompt: '0', completion: '0', request: '0' } as any }
       ];
 
       const newScout = createScout({
@@ -206,8 +206,8 @@ describe('Scout (v0.2.0)', () => {
 
     it('should keep non-blocked provider models', async () => {
       const mockModels: FreeModel[] = [
-        { id: 'deepseek/deepseek-v3', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'groq/llama-3.1-8b', provider: 'groq', pricing: { prompt: '0', completion: '0', request: '0' } as any
+        { id: 'deepseek/deepseek-v3', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'groq/llama-3.1-8b', provider: 'groq', pricing: { prompt: '0', completion: '0', request: '0' } as any }
       ];
 
       const newScout = createScout({
@@ -228,8 +228,8 @@ describe('Scout (v0.2.0)', () => {
 
     it('should allow models from blocked providers when allowAntigravity is true', async () => {
       const mockModels: FreeModel[] = [
-        { id: 'google/gemini-pro', provider: 'google', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'gemini/gemini-flash', provider: 'gemini', pricing: { prompt: '0', completion: '0', request: '0' } as any
+        { id: 'google/gemini-pro', provider: 'google', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'gemini/gemini-flash', provider: 'gemini', pricing: { prompt: '0', completion: '0', request: '0' } as any }
       ];
 
       const newScout = createScout({
@@ -252,9 +252,9 @@ describe('Scout (v0.2.0)', () => {
   describe('rankModelsByBenchmark', () => {
     it('should prioritize elite models first', async () => {
       const mockModels: FreeModel[] = [
-        { id: 'some/random-model', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'qwen/qwen3-coder', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'deepseek/deepseek-r1', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any
+        { id: 'some/random-model', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'qwen/qwen3-coder', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'deepseek/deepseek-r1', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any }
       ];
 
       const ranked = (scout as any).rankModelsByBenchmark(mockModels, 'coding');
@@ -264,9 +264,9 @@ describe('Scout (v0.2.0)', () => {
 
     it('should prefer larger models except for speed category', async () => {
       const mockModels: FreeModel[] = [
-        { id: 'some/model-7b', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'some/model-70b', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'some/model-3b', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any
+        { id: 'some/model-7b', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'some/model-70b', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'some/model-3b', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any }
       ];
 
       const rankedCoding = (scout as any).rankModelsByBenchmark(mockModels, 'coding');
@@ -285,11 +285,11 @@ describe('Scout (v0.2.0)', () => {
   describe('categorizeModels', () => {
     it('should categorize models by functional patterns', async () => {
       const mockModels: FreeModel[] = [
-        { id: 'qwen/qwen3-coder', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'deepseek/deepseek-r1', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'mistralai/mistral-small', provider: 'groq', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'nvidia/nemotron-vl', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any,
-        { id: 'some/generic-model', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any
+        { id: 'qwen/qwen3-coder', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'deepseek/deepseek-r1', provider: 'deepseek', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'mistralai/mistral-small', provider: 'groq', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'nvidia/nemotron-vl', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any},
+        { id: 'some/generic-model', provider: 'provider', pricing: { prompt: '0', completion: '0', request: '0' } as any }
       ];
 
       const categorized = (scout as any).categorizeModels(mockModels);
@@ -312,7 +312,7 @@ describe('Scout (v0.2.0)', () => {
 
     it('should handle models that match multiple categories', async () => {
       const mockModels: FreeModel[] = [
-        { id: 'qwen/qwen3-coder-vl', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any
+        { id: 'qwen/qwen3-coder-vl', provider: 'openrouter', pricing: { prompt: '0', completion: '0', request: '0' } as any},
       ];
 
       const categorized = (scout as any).categorizeModels(mockModels);

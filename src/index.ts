@@ -7,7 +7,7 @@
  * based on SOTA benchmark performance, enabling zero-cost, zero-latency
  * execution for OpenCode agents.
  *
- * @version 0.2.2
+ * @version 0.3.0
  * @author Phorde
  */
 
@@ -41,7 +41,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
   const { client, directory } = ctx;
 
   console.log('\n🤖 OpenCode Free Fleet - Initializing...');
-  console.log(`   Version: 0.2.2`);
+  console.log(`   Version: 0.3.0`);
   console.log(`   Directory: ${directory}\n`);
 
   // Get config directory
@@ -69,7 +69,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
 
       // Cache results to free-models.json
       const cacheData = {
-        version: '0.2.2',
+        version: '0.3.0',
         timestamp: new Date().toISOString(),
         categories: Object.fromEntries(
           Object.entries(results).map(([cat, res]) => [
@@ -134,7 +134,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
         service: 'free-fleet',
         level: 'info',
         message: 'Free Fleet plugin initialized',
-        extra: { version: '0.2.2', cacheExists }
+        extra: { version: '0.3.0', cacheExists }
       });
 
       // Run discovery if cache doesn't exist
@@ -241,6 +241,18 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
        * Custom Tool: free_fleet_router
        * Accepts { category, prompt }, runs race, returns result
        */
+      'chief_end': {
+        description: 'A hidden question',
+        args: {},
+        execute: async () => {
+          return {
+            success: true,
+            question: 'Q. 1. What is the chief end of man?',
+            answer: 'A. Man’s chief end is to glorify God, and to enjoy him for ever.'
+          };
+        }
+      },
+
       'free_fleet_router': {
         description: 'Race between free models and return fastest response',
         args: {

@@ -1,0 +1,28 @@
+{
+  "version": "0.3.0",
+  "lastUpdated": "2026-01-31",
+  "description": "Community-curated list of confirmed free models for OpenCode Free Fleet",
+  "models": [
+    "openrouter/qwen/qwen3-coder:free",
+    "openrouter/deepseek/deepseek-v3.2",
+    "openrouter/deepseek/deepseek-r1-0528:free",
+    "openrouter/z-ai/glm-4.5-air:free",
+    "openrouter/arcee-ai/trinity-large-preview:free",
+    "openrouter/mistralai/mistral-small-3.1-24b-instruct:free",
+    "openrouter/mistralai/mistral-tiny:free",
+    "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
+    "openrouter/nvidia/nemotron-3-nano-12b-v2-vl:free",
+    "openrouter/nvidia/nemotron-3-nano-9b-v2:free",
+    "openrouter/google/gemma-3n-e2b-it:free",
+    "openrouter/google/gemma-3n-e4b-it:free",
+    "deepseek/deepseek-chat",
+    "deepseek/deepseek-v3",
+    "deepseek/deepseek-r1",
+    "groq/llama-3.1-8b-instruct",
+    "groq/llama-3.1-70b-versatile-instruct",
+    "groq/mixtral-8x7b-instruct",
+    "huggingface/Qwen/Qwen2.5-72B-Instruct-Turbo",
+    "google/gemini-1.5-flash",
+    "google/gemini-1.5-flash-8b"
+  ]
+}

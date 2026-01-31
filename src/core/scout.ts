@@ -1,7 +1,7 @@
 /**
  * The Scout - Multi-Provider Free Model Discovery & Benchmark-Based Ranking
  *
- * v0.2.0 Upgrade: Metadata Oracle + Smart Free Tier Detection
+ * v0.3.0 Upgrade: Zero-Config Mode, Live Updates, and Ultra-Free-Mode
  *
  * This module discovers free LLM models from ALL connected providers,
  * aggregates metadata from external APIs, and ranks them by SOTA benchmark performance.
@@ -107,6 +107,8 @@ export class Scout {
 
   /**
    * Detect active providers from OpenCode configuration
+   *
+   * Zero-Config Mode: If config is missing (ENOENT), falls back to default providers
    */
   private async detectActiveProviders(): Promise<ActiveProvidersResult> {
     console.log('\n🔍 Scout: Detecting active OpenCode providers...');
@@ -120,8 +122,42 @@ export class Scout {
       if (!this.config.opencodeConfigPath) {
         throw new Error('OpenCode config path not set');
       }
-      
-      const configContent = await fs.readFile(this.config.opencodeConfigPath, 'utf-8');
+
+      let configContent: string;
+
+      try {
+        configContent = await fs.readFile(this.config.opencodeConfigPath, 'utf-8');
+      } catch (readError: any) {
+        if (readError.code === 'ENOENT') {
+          // Zero-Config Mode: Config file not found, use default providers
+          console.log('⚠️ Zero-Config Mode Active');
+          uniqueProviders = ['models.dev', 'openrouter'];
+          console.log(`📊 Scout: Using default providers: ${uniqueProviders.join(', ')}`);
+
+          // Create adapters for each provider
+          const { createAdapter } = await import('./adapters/index.js');
+
+          for (const providerId of uniqueProviders) {
+            try {
+              const adapter = createAdapter(providerId);
+              adapters.set(providerId, adapter);
+              console.log(`✓ Scout: Created adapter for ${providerId}`);
+            } catch (error) {
+              const err = error as Error;
+              errors.push(`Adapter for ${providerId} failed: ${err.message}`);
+            }
+          }
+
+          return {
+            providers: uniqueProviders,
+            adapters,
+            errors
+          };
+        } else {
+          throw readError;
+        }
+      }
+
       const config = JSON.parse(configContent);
 
       // Check for configured providers
@@ -465,13 +501,17 @@ export class Scout {
    * Generate category configuration from ranked models
    */
   private generateCategoryConfig(category: ModelCategory, rankedModels: FreeModel[]): CategoryConfig {
-    const topModels = rankedModels.slice(0, Math.min(5, rankedModels.length));
+    // Ultra-Free-Mode: Return ALL models when enabled
+    const topModels = this.config.ultraFreeMode
+      ? rankedModels // Return all models
+      : rankedModels.slice(0, Math.min(5, rankedModels.length)); // Default: top 5
+
     const modelIds = topModels.map((m) => `${m.provider}/${m.id}`);
 
     return {
       model: modelIds[0],
       fallback: modelIds.slice(1),
-      description: `Auto-ranked by Free Fleet v0.2.0 (Metadata Oracle) - ${category.toUpperCase()} category`
+      description: `Auto-ranked by Free Fleet v0.3.0 (Metadata Oracle) - ${category.toUpperCase()} category`
     };
   }
 
@@ -481,7 +521,7 @@ export class Scout {
    * with metadata enrichment from external APIs
    */
   async discover(): Promise<Record<ModelCategory, ScoutResult>> {
-    console.log('\n🤖 Free Fleet v0.2.0 (Metadata Oracle) - Starting omni-provider discovery...\n');
+    console.log('\n🤖 Free Fleet v0.3.0 (Metadata Oracle) - Starting omni-provider discovery...\n');
 
     // Initialize metadata oracle and antigravity check
     await this.initialize();

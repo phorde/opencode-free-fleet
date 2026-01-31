@@ -8,10 +8,12 @@ Automatically ranks and competes free LLM models by benchmark performance from *
 
 ## 📊 Current Status
 
-- **Version:** 0.2.0
-- **Status:** Production Ready ✅
-- **Architecture:** Modular Multi-Provider Discovery with Metadata Oracle
-- **Repository:** https://github.com/phorde/opencode-free-fleet (Public)
+| Badge | Status |
+|-------|--------|
+| [![NPM Version](https://img.shields.io/npm/v/opencode-free-fleet?style=flat-square)](https://www.npmjs.com/package/opencode-free-fleet) | `v0.3.0` |
+| [![License](https://img.shields.io/npm/l/opencode-free-fleet?style=flat-square)](https://opensource.org/licenses/MIT) | MIT |
+| [![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]() | ✅ Passing |
+| [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square)]() | TypeScript |
 
 ---
 
@@ -20,17 +22,12 @@ Automatically ranks and competes free LLM models by benchmark performance from *
 ### 🤖 Omni-Scout (Multi-Provider Discovery)
 
 **75+ Providers Supported:**
-- OpenRouter
-- Groq
-- Cerebras
-- Google Cloud AI
-- DeepSeek
-- ModelScope
-- Hugging Face
-- And more (extensible via adapter system)
+- OpenRouter, Groq, Cerebras, Google Cloud AI, DeepSeek
+- ModelScope, Hugging Face, Z.Ai, and 70+ more
 
 **Key Capabilities:**
-- ✅ **Automatic Provider Detection** - Scans `~/.config/opencode/` or `oh-my-opencode.json`
+- ✅ **Zero-Config Mode** - Works without `oh-my-opencode.json` (graceful fallback)
+- ✅ **Automatic Provider Detection** - Scans `~/.config/opencode/` for active providers
 - ✅ **Cross-Provider Metadata Lookup** - Verifies free tier via Models.dev API + provider reports
 - ✅ **Confidence Scoring** - 0.0 (uncertain) to 1.0 (confirmed free)
 - ✅ **Intelligent Blocklist** - Blocks Google/Gemini when Antigravity is active (respects `allowAntigravity` flag)
@@ -46,6 +43,13 @@ Automatically ranks and competes free LLM models by benchmark performance from *
 - ✅ Timeout protection (configurable)
 - ✅ Progress monitoring (onProgress callbacks)
 
+### 🌐 Live Updates (Community Source)
+
+The Oracle fetches fresh community-curated free models from GitHub:
+- URL: `https://raw.githubusercontent.com/phorde/opencode-free-fleet/main/resources/community-models.json`
+- Fire-and-forget (doesn't block boot)
+- Graceful fallback if offline
+
 ---
 
 ## 🏗️ Architecture
@@ -58,8 +62,9 @@ Automatically ranks and competes free LLM models by benchmark performance from *
 │  ┌──────────────────────────────────────┐    │
 │  │   🤖 Scout (Discovery Engine)     │    │
 │  │   ├── 📊 Metadata Oracle        │    │
+│  │   │   └── 🌐 Community Source    │    │
 │  │   │   └── 🧩 Provider Adapters     │    │
-│  │                               │    │
+│  │   │                              │    │
 │  │   └── 🏁 Racer (Competition)    │    │
 │  │                               │    │
 │  └──────────────────────────────────────┘    │
@@ -108,32 +113,16 @@ The plugin uses **multiple metadata sources** to verify if models are free:
 
 **Sources:**
 1. **Models.dev API** - Public model metadata database
-2. **Provider SDKs** - Native SDKs for each provider (OpenRouter, Groq, etc.)
-3. **Static Whitelist** - Confirmed free models (curated, updatable)
+2. **Community Source** - GitHub-hosted `community-models.json`
+3. **Provider SDKs** - Native SDKs for each provider (OpenRouter, Groq, etc.)
+4. **Static Whitelist** - Confirmed free models (curated, updatable)
 
 **Confidence Scoring:**
 - `1.0` - **Confirmed free** - Multiple sources say it's free
 - `0.7` - **Likely free** - Metadata exists but not explicitly marked free
 - `0.0` - **Uncertain** - No metadata available
 
-### 3. Free Tier Detection Logic
-
-For each model, the Oracle:
-1. Checks if it's in the confirmed free whitelist
-2. Queries Models.dev API
-3. Checks provider SDK reports
-4. Aggregates results with confidence score
-
-**Example:**
-```typescript
-const metadata = await oracle.fetchModelMetadata('google/gemini-1.5-flash');
-
-if (metadata.isFree) {
-  console.log(`✅ Google/Gemini is FREE (confidence: ${metadata.confidence})`);
-}
-```
-
-### 4. Safety (Antigravity Blocklist)
+### 3. Safety (Antigravity Blocklist)
 
 **Default Behavior:**
 - If `opencode-antigravity-auth` plugin is detected:
@@ -147,7 +136,7 @@ const scout = new Scout({
 });
 ```
 
-### 5. Multi-Provider Ranking Algorithm
+### 4. Multi-Provider Ranking Algorithm
 
 **Priority Order:**
 1. **Confidence Score** (highest first) - Verified free models prioritized
@@ -167,7 +156,7 @@ const ranked = scout.rankModelsByBenchmark([deepseekR1, randomModel], 'reasoning
 // Result: DeepSeek R1 wins (Elite family membership)
 ```
 
-### 6. Tool Commands
+### 5. Tool Commands
 
 **Discovery Tool (`/fleet-scout`):**
 ```bash
@@ -201,6 +190,7 @@ interface ScoutConfig {
   antigravityPath?: string;          // Path to Antigravity accounts
   opencodeConfigPath?: string;        // Path to OpenCode config
   allowAntigravity?: boolean;         // Allow Google/Gemini (default: false)
+  ultraFreeMode?: boolean;             // Return ALL models (default: false)
 }
 ```
 
@@ -208,6 +198,26 @@ interface ScoutConfig {
 - `antigravityPath`: `~/.config/opencode/antigravity-accounts.json`
 - `opencodeConfigPath`: `~/.config/opencode/oh-my-opencode.json`
 - `allowAntigravity`: `false` (Blocks Google/Gemini by default)
+- `ultraFreeMode`: `false` (Returns top 5 models, not all)
+
+### Ultra-Free-Mode
+
+When `ultraFreeMode: true`, the Scout returns **ALL** verified free models instead of just the top 5.
+
+**When to use:**
+- You need maximum survivability (quantity over quality)
+- You want to try every possible free model
+- You're willing to accept longer fallback chains
+
+**Example:**
+```typescript
+const scout = new Scout({
+  ultraFreeMode: true  // Return ALL free models
+});
+
+const results = await scout.discover();
+const codingModels = results.coding.rankedModels;  // Could be 50+ models
+```
 
 ### Race Config
 
@@ -291,8 +301,37 @@ bun install
 bun test
 
 # Build for production
-bun run build:tsc
+bun run build
 ```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) for technical details.
+
+### Adding Free Models
+
+The community-maintained list of free models is hosted at `resources/community-models.json`. To add or update free models:
+
+1. Fork the repository
+2. Edit `resources/community-models.json`:
+   ```json
+   {
+     "version": "0.3.0",
+     "lastUpdated": "2026-01-31",
+     "models": [
+       "provider/model-id:free"
+     ]
+   }
+   ```
+3. Submit a pull request with a brief explanation
+
+**Key Areas for Contribution:**
+1. **Provider Adapters** - Add new providers by implementing the `ProviderAdapter` interface
+2. **Metadata Sources** - Add new metadata sources for model verification
+3. **Benchmark Rankings** - Update elite families with new SOTA models
+4. **Free Models List** - Add newly discovered free models to `community-models.json`
 
 ---
 
@@ -302,26 +341,21 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Please see [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) for technical details.
-
-**Key Areas for Contribution:**
-1. **Provider Adapters** - Add new providers by implementing the `ProviderAdapter` interface
-2. **Metadata Sources** - Add new metadata sources for model verification
-3. **Benchmark Rankings** - Update elite families with new SOTA models
-
----
-
 ## 📝 Version History
 
-- **0.2.0** (Current) - Metadata Oracle + 75+ Providers
+- **0.3.0** (Current) - Zero-Config Mode, Live Updates, and Ultra-Free-Mode
+  - ✅ **Zero-Config Mode** - Graceful fallback when config missing
+  - ✅ **Live Update Mechanism** - Fetches community free models from GitHub
+  - ✅ **Ultra-Free-Mode** - Configurable "quantity over quality" mode
+  - ✅ **Chief End Easter Egg** - Hidden theological reference
+
+- **0.2.2** (Previous) - Metadata Oracle + 75+ Providers
   - Added Metadata Oracle for cross-provider free tier verification
   - Implemented modular adapter system for 75+ providers
   - Added intelligent blocklist based on Antigravity presence
   - Added confidence scoring (0.0 to 1.0) for free tier verification
 
-- **0.1.0** (Previous) - OpenRouter-only support
+- **0.1.0** (Initial) - OpenRouter-only support
   - Single provider (OpenRouter)
   - Hardcoded free tier detection (`pricing.prompt === "0"`)
   - Basic multi-provider support (5 adapters)
@@ -338,14 +372,16 @@ Contributions are welcome! Please see [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATI
 **Code Integrity:**
 - Dependencies are from official npm registry (`@opencode-ai/plugin`)
 - All code is type-checked and compiled
+- Published with provenance verification
 
 ---
 
-## 📈 Badges
+## 📊 Badges
 
-[![NPM Version](https://img.shields.io/npm/v/opencode-free-fleet?style=flat-square)](https://img.shields.io/npm/v/opencode-free-fleet)
-[![License](https://img.shields.io/npm/l/opencode-free-fleet?style=flat-square)](https://img.shields.io/npm/l/opencode-free-fleet)
-[![Bun](https://img.shields.io/badge/v/opencode-free-fleet?style=flat-square)](https://img.shields.io/badge/v/opencode-free-fleet?main&label=Bun)
+[![NPM Version](https://img.shields.io/npm/v/opencode-free-fleet?style=flat-square)](https://www.npmjs.com/package/opencode-free-fleet)
+[![License](https://img.shields.io/npm/l/opencode-free-fleet?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square)]()
 
 ---
 

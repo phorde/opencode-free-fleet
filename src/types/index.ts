@@ -73,6 +73,7 @@ export interface ScoutConfig {
   antigravityPath?: string;
   opencodeConfigPath?: string;
   allowAntigravity?: boolean;
+  ultraFreeMode?: boolean;
 }
 
 /**

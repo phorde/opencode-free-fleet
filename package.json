@@ -1,7 +1,7 @@
 {
   "name": "opencode-free-fleet",
   "version": "0.3.0",
-  "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - v0.3.0 (Clean Build)",
+  "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - v0.3.0 Release",
   "author": {
     "name": "Phorde",
     "email": "consultorio@phorde.com.br"
@@ -65,7 +65,9 @@
     "multi-provider",
     "metadata-oracle",
     "75+ providers",
-    "clean-build",
+    "zero-config",
+    "live-updates",
+    "ultra-free-mode",
     "v0.3.0"
   ]
 }

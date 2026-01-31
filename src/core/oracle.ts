@@ -1,8 +1,22 @@
 /**
  * Metadata Oracle - Cross-Provider Model Metadata Lookup
  *
- * v0.2.1 - Build Repair: Removed problematic Z.Ai SDK import
+ * v0.3.0 - Added Live Update Mechanism (Community Source)
  */
+
+/**
+ * Remote community definitions URL
+ */
+const REMOTE_DEFINITIONS_URL = 'https://raw.githubusercontent.com/phorde/opencode-free-fleet/main/resources/community-models.json';
+
+/**
+ * Interface for remote community definitions
+ */
+interface CommunityDefinitions {
+  version: string;
+  lastUpdated: string;
+  models: string[];
+}
 
 /**
  * Static knowledge base of confirmed free models
@@ -183,6 +197,51 @@ export class MetadataOracle {
 
   constructor() {
     this._initializeAdapters();
+    // Fire-and-forget fetch of remote definitions
+    this.fetchRemoteDefinitions().catch(err => {
+      console.warn('⚠️  Oracle: Failed to fetch remote definitions:', err.message);
+    });
+  }
+
+  /**
+   * Fetch remote community definitions and merge into CONFIRMED_FREE_MODELS
+   */
+  private async fetchRemoteDefinitions(): Promise<void> {
+    try {
+      console.log('🌐 Oracle: Fetching remote community definitions...');
+
+      const response = await fetch(REMOTE_DEFINITIONS_URL, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json() as CommunityDefinitions;
+
+      if (!data.models || !Array.isArray(data.models)) {
+        throw new Error('Invalid format: expected models array');
+      }
+
+      // Merge models into CONFIRMED_FREE_MODELS
+      let addedCount = 0;
+      for (const modelId of data.models) {
+        if (!CONFIRMED_FREE_MODELS.has(modelId)) {
+          CONFIRMED_FREE_MODELS.add(modelId);
+          addedCount++;
+        }
+      }
+
+      console.log(`✓ Oracle: Fetched ${data.models.length} community models, added ${addedCount} new ones`);
+      console.log(`  Version: ${data.version}, Last Updated: ${data.lastUpdated}`);
+    } catch (error) {
+      const err = error as Error;
+      // Only log warnings, don't throw - this is optional enhancement
+      console.warn(`⚠️  Oracle: Could not fetch remote definitions: ${err.message}`);
+      console.log('  Continuing with local CONFIRMED_FREE_MODELS set only...');
+    }
   }
 
   /**
