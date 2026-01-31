@@ -1,19 +1,17 @@
+<div align="center">
+
 # 🚀 opencode-free-fleet
 
-**Economic Load Balancing and Zero-Cost Model Discovery for OpenCode**
+**Economic Load Balancing, Task Delegation, and Zero-Cost Model Discovery for OpenCode**
+
+[![NPM Version](https://img.shields.io/npm/v/opencode-free-fleet?style=for-the-badge&labelColor=000000)](https://www.npmjs.com/package/opencode-free-fleet)
+[![License](https://img.shields.io/github/license/phorde/opencode-free-fleet?style=for-the-badge&labelColor=000000)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge&labelColor=000000)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=for-the-badge&labelColor=000000)]()
 
 Automatically ranks and competes free LLM models by benchmark performance from **75+ OpenCode providers** using SOTA benchmarks and metadata oracles.
 
----
-
-## 📊 Current Status
-
-| Badge                                                                                                                                   | Status     |
-| --------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| [![NPM Version](https://img.shields.io/npm/v/opencode-free-fleet?style=flat-square)](https://www.npmjs.com/package/opencode-free-fleet) | `v0.4.0`   |
-| [![License](https://img.shields.io/github/license/phorde/opencode-free-fleet?style=flat-square)](https://opensource.org/licenses/MIT)   | MIT        |
-| [![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]()                                                  | ✅ Passing |
-| [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square)]()                                                 | TypeScript |
+</div>
 
 ---
 
@@ -481,15 +479,6 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 - Dependencies are from official npm registry (`@opencode-ai/plugin`)
 - All code is type-checked and compiled
 - Published with provenance verification
-
----
-
-## 📊 Badges
-
-[![NPM Version](https://img.shields.io/npm/v/opencode-free-fleet?style=flat-square)](https://www.npmjs.com/package/opencode-free-fleet)
-[![License](https://img.shields.io/npm/l/opencode-free-fleet?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]()
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square)]()
 
 ---
 
