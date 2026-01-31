@@ -34,12 +34,12 @@ import {
 /**
  * Strict Validator for Ultra Free mode
  */
-import { StrictValidator, type AuditEvent } from "./validator.js";
+import { StrictValidator } from "./validator.js";
 
 /**
  * Audit Logger
  */
-import { AuditLogger } from "./audit.js";
+import { AuditLogger, type AuditEvent } from "./audit.js";
 
 /**
  * Default scout configuration

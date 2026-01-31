@@ -406,17 +406,32 @@ export class MetadataOracle {
       : undefined;
     const isFreeViaScraper = scrapedPolicy?.freeModels.includes(modelId);
 
-    for (const providerId of availableAdapters) {
-      const adapter = this.adapters.get(providerId);
-      if (!adapter) continue;
+    const timeoutMs = 5000;
+    const fetchPromises = availableAdapters.map(async (pId) => {
+      const adapter = this.adapters.get(pId);
+      if (!adapter) return null;
 
       try {
-        const metadata = await adapter.fetchModelMetadata(modelId);
-        allMetadata.push(metadata);
-      } catch (error) {
-        console.warn(
-          `⚠️  Metadata Oracle: Adapter ${providerId} failed: ${error}`,
+        const fetchPromise = adapter.fetchModelMetadata(modelId);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`Timeout after ${timeoutMs}ms`)),
+            timeoutMs,
+          ),
         );
+
+        return await Promise.race([fetchPromise, timeoutPromise]);
+      } catch (error) {
+        console.warn(`⚠️  Metadata Oracle: Adapter ${pId} failed: ${error}`);
+        return null;
+      }
+    });
+
+    const results = await Promise.allSettled(fetchPromises);
+
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value) {
+        allMetadata.push(result.value);
       }
     }
 

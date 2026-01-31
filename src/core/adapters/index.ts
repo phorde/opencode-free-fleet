@@ -15,6 +15,40 @@ import {
   ModelCategory,
   ProviderConfig,
 } from "../../types/index.js";
+import { CircuitBreaker } from "../circuit-breaker.js";
+
+/**
+ * Resilient Adapter Wrapper
+ * Adds circuit breaker protection to any provider adapter
+ */
+class ResilientAdapter implements ProviderAdapter {
+  private circuitBreaker: CircuitBreaker;
+
+  constructor(private adapter: ProviderAdapter) {
+    // 3 failures, 30s reset timeout (default)
+    this.circuitBreaker = new CircuitBreaker();
+  }
+
+  get providerId(): string {
+    return this.adapter.providerId;
+  }
+
+  get providerName(): string {
+    return this.adapter.providerName;
+  }
+
+  async fetchModels(): Promise<ProviderModel[]> {
+    return this.circuitBreaker.execute(() => this.adapter.fetchModels());
+  }
+
+  isFreeModel(model: ProviderModel): boolean {
+    return this.adapter.isFreeModel(model);
+  }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    return this.adapter.normalizeModel(model);
+  }
+}
 
 /**
  * OpenRouter Adapter
@@ -942,13 +976,15 @@ export function createAdapter(
     huggingface: () => new HuggingFaceAdapter(),
   };
 
-  const adapterFactory = adapters[providerId];
-
-  if (adapterFactory) {
-    return adapterFactory();
+  const factory = adapters[providerId];
+  if (factory) {
+    const adapter = factory();
+    // Wrap with circuit breaker for resilience
+    return new ResilientAdapter(adapter);
   }
 
-  // Fallback to GenericAdapter
-  console.log(`ℹ️  Using GenericAdapter for ${providerId}`);
-  return new GenericAdapter(providerId, providerId, config);
+  // Generic fallback
+  return new ResilientAdapter(
+    new GenericAdapter(providerId, providerId, config),
+  );
 }
