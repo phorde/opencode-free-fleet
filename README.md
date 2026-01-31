@@ -438,11 +438,16 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 
 ## 📝 Version History
 
-- **0.3.0** (Current) - Zero-Config Mode, Live Updates, and Ultra-Free-Mode
+- **0.4.0** (Current) - Task Delegation & Metrics
+  - ✅ **Task Type Delegation** - Intelligent routing for 10+ task types
+  - ✅ **Fallback Chains** - Unlimited retries with configurable strategies
+  - ✅ **Metrics Engine** - Track tokens saved, latency, and success rates
+  - ✅ **New Tools** - `/fleet-delegate`, `/fleet-config`, `/fleet-status`
+
+- **0.3.0** (Previous) - Zero-Config Mode & Ultra-Free
   - ✅ **Zero-Config Mode** - Graceful fallback when config missing
   - ✅ **Live Update Mechanism** - Fetches community free models from GitHub
   - ✅ **Ultra-Free-Mode** - Configurable "quantity over quality" mode
-  - ✅ **Chief End Easter Egg** - Hidden theological reference
 
 - **0.2.2** (Previous) - Metadata Oracle + 75+ Providers
   - Added Metadata Oracle for cross-provider free tier verification

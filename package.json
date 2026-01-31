@@ -1,33 +1,23 @@
 {
   "name": "opencode-free-fleet",
   "version": "0.4.0",
-  "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - v0.3.0 Release",
-  "author": {
-    "name": "Phorde",
-    "email": "phorde@hotmail.com"
-  },
-  "type": "module",
-  "main": "./dist/index.js",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./opencode": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/phorde/opencode-free-fleet"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist",
-    "src/version.ts"
+  "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - v0.4.0 Release",
+  "keywords": [
+    "opencode",
+    "llm",
+    "free-models",
+    "model-discovery",
+    "economic-load-balancing",
+    "zero-cost",
+    "benchmark-performance",
+    "sota",
+    "multi-provider",
+    "metadata-oracle",
+    "75+ providers",
+    "zero-config",
+    "live-updates",
+    "ultra-free-mode",
+    "v0.4.0"
   ],
   "dependencies": {
     "@opencode-ai/plugin": "^1.1.0"
