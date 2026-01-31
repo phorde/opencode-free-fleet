@@ -7,7 +7,8 @@
 /**
  * Remote community definitions URL
  */
-const REMOTE_DEFINITIONS_URL = 'https://raw.githubusercontent.com/phorde/opencode-free-fleet/main/resources/community-models.json';
+const REMOTE_DEFINITIONS_URL =
+  "https://raw.githubusercontent.com/phorde/opencode-free-fleet/main/resources/community-models.json";
 
 /**
  * Interface for remote community definitions
@@ -24,35 +25,35 @@ interface CommunityDefinitions {
  */
 export const CONFIRMED_FREE_MODELS = new Set([
   // OpenRouter (verified free via pricing)
-  'openrouter/qwen/qwen3-coder:free',
-  'openrouter/deepseek/deepseek-v3.2',
-  'openrouter/deepseek/deepseek-r1-0528:free',
-  'openrouter/z-ai/glm-4.5-air:free',
-  'openrouter/arcee-ai/trinity-large-preview:free',
-  'openrouter/mistralai/mistral-small-3.1-24b-instruct:free',
-  'openrouter/mistralai/mistral-tiny:free',
-  'openrouter/nvidia/nemotron-3-nano-30b-a3b:free',
-  'openrouter/nvidia/nemotron-3-nano-12b-v2-vl:free',
-  'openrouter/nvidia/nemotron-3-nano-9b-v2:free',
-  'openrouter/google/gemma-3n-e2b-it:free',
-  'openrouter/google/gemma-3n-e4b-it:free',
+  "openrouter/qwen/qwen3-coder:free",
+  "openrouter/deepseek/deepseek-v3.2",
+  "openrouter/deepseek/deepseek-r1-0528:free",
+  "openrouter/z-ai/glm-4.5-air:free",
+  "openrouter/arcee-ai/trinity-large-preview:free",
+  "openrouter/mistralai/mistral-small-3.1-24b-instruct:free",
+  "openrouter/mistralai/mistral-tiny:free",
+  "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
+  "openrouter/nvidia/nemotron-3-nano-12b-v2-vl:free",
+  "openrouter/nvidia/nemotron-3-nano-9b-v2:free",
+  "openrouter/google/gemma-3n-e2b-it:free",
+  "openrouter/google/gemma-3n-e4b-it:free",
 
   // DeepSeek (official documentation)
-  'deepseek/deepseek-chat',
-  'deepseek/deepseek-v3',
-  'deepseek/deepseek-r1',
+  "deepseek/deepseek-chat",
+  "deepseek/deepseek-v3",
+  "deepseek/deepseek-r1",
 
   // Groq (current policy)
-  'groq/llama-3.1-8b-instruct',
-  'groq/llama-3.1-70b-versatile-instruct',
-  'groq/mixtral-8x7b-instruct',
+  "groq/llama-3.1-8b-instruct",
+  "groq/llama-3.1-70b-versatile-instruct",
+  "groq/mixtral-8x7b-instruct",
 
   // Hugging Face (serverless free tier)
-  'huggingface/Qwen/Qwen2.5-72B-Instruct-Turbo',
+  "huggingface/Qwen/Qwen2.5-72B-Instruct-Turbo",
 
   // Google (limited free tier)
-  'google/gemini-1.5-flash',
-  'google/gemini-1.5-flash-8b'
+  "google/gemini-1.5-flash",
+  "google/gemini-1.5-flash-8b",
 ]);
 
 /**
@@ -60,7 +61,7 @@ export const CONFIRMED_FREE_MODELS = new Set([
  * Source for free tier verification
  */
 const METADATA_SOURCES = [
-  'models.dev' // Open source model metadata database
+  "models.dev", // Open source model metadata database
 ] as const;
 
 /**
@@ -108,21 +109,26 @@ export interface MetadataAdapter {
  * Models.dev metadata API client
  */
 class ModelsDevAdapter implements MetadataAdapter {
-  readonly providerId = 'models.dev';
-  readonly providerName = 'Models.dev';
+  readonly providerId = "models.dev";
+  readonly providerName = "Models.dev";
+  private cache: any[] | null = null;
+  private lastCacheTime: number = 0;
+  private readonly CACHE_TTL = 3600000; // 1 hour TTL
 
   async fetchModelsMetadata(modelIds?: string[]): Promise<ModelMetadata[]> {
     if (modelIds && modelIds.length === 0) {
-      console.log('📊 Models.dev: No model IDs provided, fetching all known free models');
+      console.log(
+        "📊 Models.dev: No model IDs provided, fetching all known free models",
+      );
     }
 
     const all = await this._fetchFromModelsDev();
-    return modelIds ? all.filter(m => modelIds.includes(m.id)) : all;
+    return modelIds ? all.filter((m) => modelIds.includes(m.id)) : all;
   }
 
   async fetchModelMetadata(modelId: string): Promise<ModelMetadata> {
     const all = await this._fetchFromModelsDev();
-    const model = all.find(m => m.id === modelId);
+    const model = all.find((m) => m.id === modelId);
 
     if (!model) {
       return {
@@ -131,14 +137,17 @@ class ModelsDevAdapter implements MetadataAdapter {
         name: modelId,
         isFree: false,
         confidence: 0,
-        reason: 'Model not found in Models.dev',
-        pricing: { prompt: '0', completion: '0', request: '0' }
+        reason: "Model not found in Models.dev",
+        pricing: { prompt: "0", completion: "0", request: "0" },
       };
     }
 
     // Determine if free based on Models.dev data
-    const isFree = model.pricing?.prompt === '0' || model.pricing?.prompt === '0.0' ||
-                    model.pricing?.completion === '0' || model.pricing?.completion === '0.0';
+    const isFree =
+      model.pricing?.prompt === "0" ||
+      model.pricing?.prompt === "0.0" ||
+      model.pricing?.completion === "0" ||
+      model.pricing?.completion === "0.0";
 
     return {
       id: model.id,
@@ -146,28 +155,38 @@ class ModelsDevAdapter implements MetadataAdapter {
       name: model.name || model.id,
       isFree,
       confidence: isFree ? 1.0 : 0.7,
-      reason: isFree ? `Confirmed free via Models.dev (prompt=${model.pricing?.prompt}, completion=${model.pricing?.completion})` : 'Uncertain pricing - SDK may differ',
+      reason: isFree
+        ? `Confirmed free via Models.dev (prompt=${model.pricing?.prompt}, completion=${model.pricing?.completion})`
+        : "Uncertain pricing - SDK may differ",
       lastVerified: new Date().toISOString(),
       pricing: {
-        prompt: model.pricing?.prompt || '0',
-        completion: model.pricing?.completion || '0',
-        request: model.pricing?.request || '0'
-      }
+        prompt: model.pricing?.prompt || "0",
+        completion: model.pricing?.completion || "0",
+        request: model.pricing?.request || "0",
+      },
     };
   }
 
   private async _fetchFromModelsDev(): Promise<any[]> {
-    console.log('📊 Models.dev: Fetching model metadata...');
+    const now = Date.now();
+    if (this.cache && now - this.lastCacheTime < this.CACHE_TTL) {
+      console.log("📊 Models.dev: Using cached metadata");
+      return this.cache;
+    }
+
+    console.log("📊 Models.dev: Fetching model metadata...");
 
     try {
-      const response = await fetch('https://models.dev/api/v1/models', {
+      const response = await fetch("https://models.dev/api/v1/models", {
         headers: {
-          'Accept': 'application/json'
-        }
+          Accept: "application/json",
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Models.dev API error: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Models.dev API error: ${response.status} ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -175,9 +194,17 @@ class ModelsDevAdapter implements MetadataAdapter {
 
       console.log(`✓ Models.dev: Found ${models.length} models`);
 
+      this.cache = models;
+      this.lastCacheTime = now;
+
       return models;
     } catch (error) {
-      console.error('❌ Models.dev API error:', error);
+      // Quietly handle API failures (likely rate limit or downtime)
+      // console.error('❌ Models.dev API error:', error);
+      if (this.cache) {
+        console.warn("⚠️  Models.dev: API unavailable, using stale cache");
+        return this.cache;
+      }
       return [];
     }
   }
@@ -198,8 +225,11 @@ export class MetadataOracle {
   constructor() {
     this._initializeAdapters();
     // Fire-and-forget fetch of remote definitions
-    this.fetchRemoteDefinitions().catch(err => {
-      console.warn('⚠️  Oracle: Failed to fetch remote definitions:', err.message);
+    this.fetchRemoteDefinitions().catch((err) => {
+      console.warn(
+        "⚠️  Oracle: Failed to fetch remote definitions:",
+        err.message,
+      );
     });
   }
 
@@ -208,21 +238,21 @@ export class MetadataOracle {
    */
   private async fetchRemoteDefinitions(): Promise<void> {
     try {
-      console.log('🌐 Oracle: Fetching remote community definitions...');
+      console.log("🌐 Oracle: Fetching remote community definitions...");
 
       const response = await fetch(REMOTE_DEFINITIONS_URL, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(5000) // 5 second timeout
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(5000), // 5 second timeout
       });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json() as CommunityDefinitions;
+      const data = (await response.json()) as CommunityDefinitions;
 
       if (!data.models || !Array.isArray(data.models)) {
-        throw new Error('Invalid format: expected models array');
+        throw new Error("Invalid format: expected models array");
       }
 
       // Merge models into CONFIRMED_FREE_MODELS
@@ -234,13 +264,19 @@ export class MetadataOracle {
         }
       }
 
-      console.log(`✓ Oracle: Fetched ${data.models.length} community models, added ${addedCount} new ones`);
-      console.log(`  Version: ${data.version}, Last Updated: ${data.lastUpdated}`);
+      console.log(
+        `✓ Oracle: Fetched ${data.models.length} community models, added ${addedCount} new ones`,
+      );
+      console.log(
+        `  Version: ${data.version}, Last Updated: ${data.lastUpdated}`,
+      );
     } catch (error) {
       const err = error as Error;
       // Only log warnings, don't throw - this is optional enhancement
-      console.warn(`⚠️  Oracle: Could not fetch remote definitions: ${err.message}`);
-      console.log('  Continuing with local CONFIRMED_FREE_MODELS set only...');
+      console.warn(
+        `⚠️  Oracle: Could not fetch remote definitions: ${err.message}`,
+      );
+      console.log("  Continuing with local CONFIRMED_FREE_MODELS set only...");
     }
   }
 
@@ -248,10 +284,10 @@ export class MetadataOracle {
    * Initialize all metadata adapters
    */
   private _initializeAdapters(): void {
-    console.log('🔮 Metadata Oracle: Initializing adapters...');
+    console.log("🔮 Metadata Oracle: Initializing adapters...");
 
     // Models.dev - Always available
-    this.adapters.set('models.dev', new ModelsDevAdapter());
+    this.adapters.set("models.dev", new ModelsDevAdapter());
 
     // Note: Removed Z.Ai SDK, Google Cloud AI SDK, etc.
     // These adapters are now implemented directly in src/core/adapters/index.ts
@@ -276,10 +312,36 @@ export class MetadataOracle {
    * Fetch metadata for a specific model from all available sources
    * This is the main method Scout should call for free tier detection
    */
-  async fetchModelMetadata(modelId: string): Promise<ModelMetadata> {
+  async fetchModelMetadata(
+    modelId: string,
+    providerId?: string,
+  ): Promise<ModelMetadata> {
     console.log(`\n🔮 Metadata Oracle: Fetching metadata for ${modelId}...\n`);
 
+    // 1. Check local/community confirmed list (Primary Source of Truth)
+    // Check exact ID match
+    if (CONFIRMED_FREE_MODELS.has(modelId)) {
+      return this._createConfirmedMetadata(modelId, "community-list");
+    }
+
+    // Check provider-prefixed match (e.g. openrouter/vendor/model)
+    if (providerId) {
+      const prefixedId = `${providerId}/${modelId}`;
+      if (CONFIRMED_FREE_MODELS.has(prefixedId)) {
+        return this._createConfirmedMetadata(modelId, providerId);
+      }
+
+      // Special case: 'openrouter' prefix often used in community list
+      if (providerId !== "openrouter") {
+        const openRouterId = `openrouter/${modelId}`;
+        if (CONFIRMED_FREE_MODELS.has(openRouterId)) {
+          return this._createConfirmedMetadata(modelId, providerId);
+        }
+      }
+    }
+
     const availableAdapters = this.getAvailableAdapters();
+
     const allMetadata: ModelMetadata[] = [];
 
     // Try each available adapter
@@ -291,36 +353,38 @@ export class MetadataOracle {
         const metadata = await adapter.fetchModelMetadata(modelId);
         allMetadata.push(metadata);
       } catch (error) {
-        console.warn(`⚠️  Metadata Oracle: Adapter ${providerId} failed: ${error}`);
+        console.warn(
+          `⚠️  Metadata Oracle: Adapter ${providerId} failed: ${error}`,
+        );
       }
     }
 
     if (allMetadata.length === 0) {
       return {
         id: modelId,
-        provider: 'unknown',
+        provider: "unknown",
         name: modelId,
         isFree: false,
         confidence: 0,
-        reason: 'Model not found in any metadata source',
-        pricing: { prompt: '0', completion: '0', request: '0' }
+        reason: "Model not found in any metadata source",
+        pricing: { prompt: "0", completion: "0", request: "0" },
       };
     }
 
     // Merge results with confidence scoring
-    const freeResults = allMetadata.filter(m => m.isFree);
+    const freeResults = allMetadata.filter((m) => m.isFree);
     const hasFreeResult = freeResults.length > 0;
 
     // Determine overall confidence
     let confidence = 0.3; // Low confidence if no metadata
-    let reason = 'No metadata found';
+    let reason = "No metadata found";
 
     if (hasFreeResult) {
       confidence = 1.0; // High confidence if at least one source says free
-      reason = `Confirmed free by ${freeResults.map(m => m.provider).join(', ')}`;
+      reason = `Confirmed free by ${freeResults.map((m) => m.provider).join(", ")}`;
     } else if (allMetadata.length > 0) {
       confidence = 0.7; // Medium confidence if metadata exists but no free result
-      reason = `Metadata found but not confirmed free (providers: ${allMetadata.map(m => m.provider).join(', ')})`;
+      reason = `Metadata found but not confirmed free (providers: ${allMetadata.map((m) => m.provider).join(", ")})`;
     }
 
     // Return first free result (highest confidence)
@@ -330,7 +394,7 @@ export class MetadataOracle {
       ...finalMetadata,
       confidence,
       reason,
-      lastVerified: new Date().toISOString()
+      lastVerified: new Date().toISOString(),
     };
   }
 
@@ -338,7 +402,9 @@ export class MetadataOracle {
    * Batch fetch metadata for multiple models
    */
   async fetchModelsMetadata(modelIds: string[]): Promise<ModelMetadata[]> {
-    console.log(`\n🔮 Metadata Oracle: Fetching metadata for ${modelIds.length} models...\n`);
+    console.log(
+      `\n🔮 Metadata Oracle: Fetching metadata for ${modelIds.length} models...\n`,
+    );
 
     const availableAdapters = this.getAvailableAdapters();
     const allMetadata: ModelMetadata[] = [];
@@ -364,6 +430,25 @@ export class MetadataOracle {
    */
   addConfirmedFreeModel(modelId: string): void {
     CONFIRMED_FREE_MODELS.add(modelId);
+  }
+
+  /**
+   * Helper to create metadata for a confirmed free model
+   */
+  private _createConfirmedMetadata(
+    modelId: string,
+    source: string,
+  ): ModelMetadata {
+    return {
+      id: modelId,
+      provider: "community-list", // Standardized provider ID for community source
+      name: modelId,
+      isFree: true,
+      confidence: 1.0,
+      reason: `Confirmed free by Community List (via ${source})`,
+      lastVerified: new Date().toISOString(),
+      pricing: { prompt: "0", completion: "0", request: "0" },
+    };
   }
 
   /**

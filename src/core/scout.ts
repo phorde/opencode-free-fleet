@@ -14,11 +14,12 @@ import type {
   ModelCategory,
   ProviderAdapter,
   ActiveProvidersResult,
-  CategoryConfig
-} from '../types/index.js';
+  CategoryConfig,
+  OpenCodeConfig,
+} from "../types/index.js";
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as fs from "fs/promises";
+import * as path from "path";
 
 /**
  * Metadata Oracle
@@ -27,16 +28,16 @@ import * as path from 'path';
 import {
   MetadataOracle,
   ModelMetadata,
-  CONFIRMED_FREE_MODELS
-} from './oracle.js';
+  CONFIRMED_FREE_MODELS,
+} from "./oracle.js";
 
 /**
  * Default scout configuration
  */
 const DEFAULT_CONFIG: ScoutConfig = {
-  antigravityPath: `${process.env.HOME || ''}/.config/opencode/antigravity-accounts.json`,
-  opencodeConfigPath: `${process.env.HOME || ''}/.config/opencode/oh-my-opencode.json`,
-  allowAntigravity: false // Default to BLOCK Google/Gemini
+  antigravityPath: `${process.env.HOME || ""}/.config/opencode/antigravity-accounts.json`,
+  opencodeConfigPath: `${process.env.HOME || ""}/.config/opencode/oh-my-opencode.json`,
+  allowAntigravity: false, // Default to BLOCK Google/Gemini
 };
 
 /**
@@ -58,20 +59,22 @@ export class Scout {
    */
   private async initialize(): Promise<void> {
     // Import Metadata Oracle
-    console.log('🔮 Metadata Oracle: Initializing adapters...');
+    console.log("🔮 Metadata Oracle: Initializing adapters...");
 
     // Note: Adapters are now implemented directly in src/core/adapters/index.ts
     // The Oracle uses them as needed
 
     // Check antigravity-auth plugin presence
     try {
-      const antigravityPath = `${process.env.HOME || ''}/.config/opencode/plugins/opencode-antigravity-auth`;
+      const antigravityPath = `${process.env.HOME || ""}/.config/opencode/plugins/opencode-antigravity-auth`;
       await fs.access(antigravityPath);
       this.antigravityActive = true;
-      console.log('✓ Scout: Antigravity auth plugin detected');
+      console.log("✓ Scout: Antigravity auth plugin detected");
     } catch {
       this.antigravityActive = false;
-      console.log('ℹ️  Scout: Could not read antigravity-auth config (may not be configured)');
+      console.log(
+        "ℹ️  Scout: Could not read antigravity-auth config (may not be configured)",
+      );
     }
   }
 
@@ -88,18 +91,22 @@ export class Scout {
 
     // Antigravity auth is already checked in initialize()
     if (this.antigravityActive && !this.config.allowAntigravity) {
-      console.log('🚫 Scout: Blocking Google/Gemini from Free Fleet (allowAntigravity=false)');
-      blocklist.add('google');
-      blocklist.add('gemini');
-      blocklist.add('opencode');
+      console.log(
+        "🚫 Scout: Blocking Google/Gemini from Free Fleet (allowAntigravity=false)",
+      );
+      blocklist.add("google");
+      blocklist.add("gemini");
+      blocklist.add("opencode");
     }
 
     this.blocklist = blocklist;
 
     if (blocklist.size > 0) {
-      console.log(`🚫 Scout: Blocklist - ${Array.from(blocklist).join(', ')}`);
+      console.log(`🚫 Scout: Blocklist - ${Array.from(blocklist).join(", ")}`);
     } else {
-      console.log('✓ Scout: No active blocklist (allowAntigravity=true or no Antigravity)');
+      console.log(
+        "✓ Scout: No active blocklist (allowAntigravity=true or no Antigravity)",
+      );
     }
 
     return blocklist;
@@ -111,7 +118,7 @@ export class Scout {
    * Zero-Config Mode: If config is missing (ENOENT), falls back to default providers
    */
   private async detectActiveProviders(): Promise<ActiveProvidersResult> {
-    console.log('\n🔍 Scout: Detecting active OpenCode providers...');
+    console.log("\n🔍 Scout: Detecting active OpenCode providers...");
 
     const providers: string[] = [];
     const adapters = new Map<string, ProviderAdapter>();
@@ -120,22 +127,27 @@ export class Scout {
 
     try {
       if (!this.config.opencodeConfigPath) {
-        throw new Error('OpenCode config path not set');
+        throw new Error("OpenCode config path not set");
       }
 
       let configContent: string;
 
       try {
-        configContent = await fs.readFile(this.config.opencodeConfigPath, 'utf-8');
+        configContent = await fs.readFile(
+          this.config.opencodeConfigPath,
+          "utf-8",
+        );
       } catch (readError: any) {
-        if (readError.code === 'ENOENT') {
+        if (readError.code === "ENOENT") {
           // Zero-Config Mode: Config file not found, use default providers
-          console.log('⚠️ Zero-Config Mode Active');
-          uniqueProviders = ['models.dev', 'openrouter'];
-          console.log(`📊 Scout: Using default providers: ${uniqueProviders.join(', ')}`);
+          console.log("⚠️ Zero-Config Mode Active");
+          uniqueProviders = ["models.dev", "openrouter"];
+          console.log(
+            `📊 Scout: Using default providers: ${uniqueProviders.join(", ")}`,
+          );
 
           // Create adapters for each provider
-          const { createAdapter } = await import('./adapters/index.js');
+          const { createAdapter } = await import("./adapters/index.js");
 
           for (const providerId of uniqueProviders) {
             try {
@@ -151,14 +163,14 @@ export class Scout {
           return {
             providers: uniqueProviders,
             adapters,
-            errors
+            errors,
           };
         } else {
           throw readError;
         }
       }
 
-      const config = JSON.parse(configContent);
+      const config = JSON.parse(configContent) as OpenCodeConfig;
 
       // Check for configured providers
       if (config.providers) {
@@ -169,8 +181,12 @@ export class Scout {
       if (config.categories) {
         const categoryModels = Object.values(config.categories)
           .map((cat: any) => cat.model)
-          .concat(...Object.values(config.categories).map((cat: any) => cat.fallback || []))
-          .map((model: string) => model.split('/')[0]);
+          .concat(
+            ...Object.values(config.categories).map(
+              (cat: any) => cat.fallback || [],
+            ),
+          )
+          .map((model: string) => model.split("/")[0]);
 
         for (const provider of categoryModels) {
           if (!providers.includes(provider)) {
@@ -181,14 +197,17 @@ export class Scout {
 
       // Remove duplicates
       uniqueProviders = [...new Set(providers)];
-      console.log(`📊 Scout: Detected providers: ${uniqueProviders.join(', ')}`);
+      console.log(
+        `📊 Scout: Detected providers: ${uniqueProviders.join(", ")}`,
+      );
 
       // Create adapters for each provider
-      const { createAdapter } = await import('./adapters/index.js');
+      const { createAdapter } = await import("./adapters/index.js");
 
       for (const providerId of uniqueProviders) {
         try {
-          const adapter = createAdapter(providerId);
+          const providerConfig = config.providers?.[providerId] || {};
+          const adapter = createAdapter(providerId, providerConfig);
           adapters.set(providerId, adapter);
           console.log(`✓ Scout: Created adapter for ${providerId}`);
         } catch (error) {
@@ -204,7 +223,7 @@ export class Scout {
     return {
       providers: uniqueProviders,
       adapters,
-      errors
+      errors,
     };
   }
 
@@ -218,17 +237,17 @@ export class Scout {
    * - Use metadata.isFree field instead of hardcoded free tier detection
    */
   private async fetchAllModels(): Promise<FreeModel[]> {
-    console.log('\n📡 Scout: Fetching models with metadata enrichment...\n');
+    console.log("\n📡 Scout: Fetching models with metadata enrichment...\n");
 
     const { providers, adapters, errors } = await this.detectActiveProviders();
 
     if (errors.length > 0) {
-      console.error('\n⚠️  Scout: Provider detection had errors:');
-      errors.forEach(err => console.error(`  - ${err}`));
+      console.error("\n⚠️  Scout: Provider detection had errors:");
+      errors.forEach((err) => console.error(`  - ${err}`));
     }
 
     if (adapters.size === 0) {
-      console.warn('\n⚠️  Scout: No active providers found');
+      console.warn("\n⚠️  Scout: No active providers found");
       return [];
     }
 
@@ -244,41 +263,54 @@ export class Scout {
         const enrichedModels: FreeModel[] = [];
 
         for (const providerModel of models) {
-          const modelMetadata = await this.metadataOracle.fetchModelMetadata(providerModel.id);
+          const modelMetadata = await this.metadataOracle.fetchModelMetadata(
+            providerModel.id,
+            providerId,
+          );
 
-          const isFree = modelMetadata.isFree;
+          // Determine free tier: Trust Provider Pricing OR Oracle
+          // This allows GenericAdapter (OpenRouter) to work without Oracle for explicitly free models
+          const isFreeViaProvider =
+            providerModel.pricing?.prompt === "0" ||
+            providerModel.pricing?.prompt === "0.0";
+
+          const isFree = isFreeViaProvider || modelMetadata.isFree;
           const isElite = await this.isEliteModel(providerModel.id);
 
           enrichedModels.push({
             id: providerModel.id,
             provider: providerId,
-            name: providerModel.name || providerModel.id.split('/')[1],
+            name: providerModel.name || providerModel.id.split("/")[1],
             description: providerModel.description,
             contextLength: providerModel.context_length,
             maxOutputTokens: providerModel.max_output_tokens,
             pricing: {
-              prompt: modelMetadata.pricing?.prompt || '0',
-              completion: modelMetadata.pricing?.completion || '0',
-              request: modelMetadata.pricing?.request || '0'
+              prompt: modelMetadata.pricing?.prompt || "0",
+              completion: modelMetadata.pricing?.completion || "0",
+              request: modelMetadata.pricing?.request || "0",
             },
             isFree,
             isElite,
             category: this.categorizeModel(providerModel.id, providerModel),
-            confidence: modelMetadata.confidence || 0.5
+            confidence: modelMetadata.confidence || 0.5,
           });
         }
 
         // Apply blocklist filter (for metadata filtering)
         const blocklist = await this.buildBlocklist();
-        const filteredModels = enrichedModels.filter(model => {
+        const filteredModels = enrichedModels.filter((model) => {
           const isBlocked = blocklist.has(model.provider);
           return !isBlocked;
         });
 
         providerModels.set(providerId, filteredModels);
-        console.log(`\n✓ Scout: ${providerId} - ${filteredModels.length} models, ${filteredModels.filter(m => m.isFree).length} free\n`);
+        console.log(
+          `\n✓ Scout: ${providerId} - ${filteredModels.length} models, ${filteredModels.filter((m) => m.isFree).length} free\n`,
+        );
       } catch (error) {
-        console.error(`\n❌ Scout: Failed to fetch from ${providerId}: ${error}`);
+        console.error(
+          `\n❌ Scout: Failed to fetch from ${providerId}: ${error}`,
+        );
         // Add error models as empty array to continue
         providerModels.set(providerId, []);
       }
@@ -300,16 +332,34 @@ export class Scout {
    */
   private categorizeModel(modelId: string, providerModel: any): ModelCategory {
     const id = modelId.toLowerCase();
-    let category: ModelCategory = 'writing';
+    let category: ModelCategory = "writing";
 
-    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
-      category = 'coding';
-    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
-      category = 'reasoning';
-    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
-      category = 'speed';
-    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
-      category = 'multimodal';
+    if (
+      id.includes("coder") ||
+      id.includes("code") ||
+      id.includes("function")
+    ) {
+      category = "coding";
+    } else if (
+      id.includes("r1") ||
+      id.includes("reasoning") ||
+      id.includes("cot") ||
+      id.includes("qwq")
+    ) {
+      category = "reasoning";
+    } else if (
+      id.includes("flash") ||
+      id.includes("distill") ||
+      id.includes("nano") ||
+      id.includes("lite")
+    ) {
+      category = "speed";
+    } else if (
+      id.includes("vl") ||
+      id.includes("vision") ||
+      id.includes("molmo")
+    ) {
+      category = "multimodal";
     }
 
     return category;
@@ -318,12 +368,17 @@ export class Scout {
   /**
    * Check if a model is in Elite families
    */
-  private async isEliteModel(modelId: string): Promise<boolean> {
-    const { ELITE_FAMILIES } = await import('../types/index.js');
-    const elitePatterns = ELITE_FAMILIES.reasoning || []; // Default to reasoning for async
+  private async isEliteModel(
+    modelId: string,
+    category: ModelCategory = "writing",
+  ): Promise<boolean> {
+    const { ELITE_FAMILIES } = await import("../types/index.js");
+    const elitePatterns = ELITE_FAMILIES[category] || [];
 
     const id = modelId.toLowerCase();
-    return elitePatterns.some((pattern: string) => id.includes(pattern.toLowerCase()));
+    return elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase()),
+    );
   }
 
   /**
@@ -350,14 +405,14 @@ export class Scout {
    */
   private getProviderPriority(providerId: string): number {
     const priorityMap: Record<string, number> = {
-      'models.dev': 1,
-      'openrouter': 2,
-      'groq': 4,
-      'cerebras': 5,
-      'google': 6,
-      'deepseek': 7,
-      'modelscope': 8,
-      'huggingface': 9
+      "models.dev": 1,
+      openrouter: 2,
+      groq: 4,
+      cerebras: 5,
+      google: 6,
+      deepseek: 7,
+      modelscope: 8,
+      huggingface: 9,
     };
 
     return priorityMap[providerId] || 99;
@@ -366,8 +421,10 @@ export class Scout {
   /**
    * Get elite patterns for a specific category
    */
-  private async _getElitePatterns(category: ModelCategory): Promise<readonly string[]> {
-    const { ELITE_FAMILIES } = await import('../types/index.js');
+  private async _getElitePatterns(
+    category: ModelCategory,
+  ): Promise<readonly string[]> {
+    const { ELITE_FAMILIES } = await import("../types/index.js");
     return ELITE_FAMILIES[category] || [];
   }
 
@@ -384,17 +441,19 @@ export class Scout {
    */
   private async rankModelsByBenchmark(
     models: FreeModel[],
-    category: ModelCategory
+    category: ModelCategory,
   ): Promise<FreeModel[]> {
     // Need to do async sort carefully since Array.sort doesn't support async
     // So we pre-calculate values that need async
-    
-    const enrichedForSort = await Promise.all(models.map(async (m) => {
-      return {
-        ...m,
-        isElite: await this.isEliteModel(m.id)
-      };
-    }));
+
+    const enrichedForSort = await Promise.all(
+      models.map(async (m) => {
+        return {
+          ...m,
+          isElite: await this.isEliteModel(m.id, category),
+        };
+      }),
+    );
 
     return enrichedForSort.sort((a, b) => {
       // Priority 1: Metadata confidence score (higher is better)
@@ -421,7 +480,7 @@ export class Scout {
       const aParams = this.extractParams(a.id);
       const bParams = this.extractParams(b.id);
 
-      if (category === 'speed') {
+      if (category === "speed") {
         if (aParams > 0 && bParams > 0 && aParams !== bParams) {
           return aParams - bParams; // Smaller first
         }
@@ -454,13 +513,15 @@ export class Scout {
    * - multimodal: IDs with "vl", "vision"
    * - writing: General purpose models not in other categories
    */
-  private categorizeModels(models: FreeModel[]): Record<ModelCategory, FreeModel[]> {
+  private categorizeModels(
+    models: FreeModel[],
+  ): Record<ModelCategory, FreeModel[]> {
     const categories: Record<ModelCategory, FreeModel[]> = {
       coding: [],
       reasoning: [],
       speed: [],
       multimodal: [],
-      writing: []
+      writing: [],
     };
 
     for (const model of models) {
@@ -468,22 +529,37 @@ export class Scout {
       let categorized = false;
 
       // Check each category
-      if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      if (
+        id.includes("coder") ||
+        id.includes("code") ||
+        id.includes("function")
+      ) {
         categories.coding.push(model);
         categorized = true;
       }
 
-      if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      if (
+        id.includes("r1") ||
+        id.includes("reasoning") ||
+        id.includes("cot") ||
+        id.includes("qwq")
+      ) {
         categories.reasoning.push(model);
         categorized = true;
       }
 
-      if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      if (
+        id.includes("flash") ||
+        id.includes("distill") ||
+        id.includes("nano") ||
+        id.includes("lite") ||
+        id.includes("small")
+      ) {
         categories.speed.push(model);
         categorized = true;
       }
 
-      if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      if (id.includes("vl") || id.includes("vision") || id.includes("molmo")) {
         categories.multimodal.push(model);
         categorized = true;
       }
@@ -500,7 +576,10 @@ export class Scout {
   /**
    * Generate category configuration from ranked models
    */
-  private generateCategoryConfig(category: ModelCategory, rankedModels: FreeModel[]): CategoryConfig {
+  private generateCategoryConfig(
+    category: ModelCategory,
+    rankedModels: FreeModel[],
+  ): CategoryConfig {
     // Ultra-Free-Mode: Return ALL models when enabled
     const topModels = this.config.ultraFreeMode
       ? rankedModels // Return all models
@@ -511,7 +590,7 @@ export class Scout {
     return {
       model: modelIds[0],
       fallback: modelIds.slice(1),
-      description: `Auto-ranked by Free Fleet v0.3.0 (Metadata Oracle) - ${category.toUpperCase()} category`
+      description: `Auto-ranked by Free Fleet v0.3.0 (Metadata Oracle) - ${category.toUpperCase()} category`,
     };
   }
 
@@ -521,7 +600,9 @@ export class Scout {
    * with metadata enrichment from external APIs
    */
   async discover(): Promise<Record<ModelCategory, ScoutResult>> {
-    console.log('\n🤖 Free Fleet v0.3.0 (Metadata Oracle) - Starting omni-provider discovery...\n');
+    console.log(
+      "\n🤖 Free Fleet v0.3.0 (Metadata Oracle) - Starting omni-provider discovery...\n",
+    );
 
     // Initialize metadata oracle and antigravity check
     await this.initialize();
@@ -530,12 +611,12 @@ export class Scout {
     const detectionResult = await this.detectActiveProviders();
 
     if (detectionResult.errors.length > 0) {
-      console.error('\n⚠️  Scout: Provider detection had errors:');
-      detectionResult.errors.forEach(err => console.error(`  - ${err}`));
+      console.error("\n⚠️  Scout: Provider detection had errors:");
+      detectionResult.errors.forEach((err) => console.error(`  - ${err}`));
     }
 
     if (detectionResult.providers.length === 0) {
-      console.warn('\n⚠️  Scout: No active providers found');
+      console.warn("\n⚠️  Scout: No active providers found");
       // Don't throw, return empty result to allow graceful failure
       // throw new Error('No active providers detected. Please configure at least one provider in OpenCode.');
     }
@@ -544,14 +625,20 @@ export class Scout {
     const allModels = await this.fetchAllModels();
 
     console.log(`\n✓ Scout: Total models discovered: ${allModels.length}`);
-    console.log(`\n✓ Scout: Free models: ${allModels.filter(m => m.isFree).length}\n`);
+    console.log(
+      `\n✓ Scout: Free models: ${allModels.filter((m) => m.isFree).length}\n`,
+    );
 
     // PHASE C + D: Categorize and Rank
-    console.log('\n📊 Scout: Categorizing and ranking models with metadata...\n');
+    console.log(
+      "\n📊 Scout: Categorizing and ranking models with metadata...\n",
+    );
     const categorizedModels = this.categorizeModels(allModels);
 
     for (const [category, models] of Object.entries(categorizedModels)) {
-      console.log(`  ${category}: ${models.length} models (${models.filter(m => m.isFree).length} free)`);
+      console.log(
+        `  ${category}: ${models.length} models (${models.filter((m) => m.isFree).length} free)`,
+      );
     }
 
     const results: Record<ModelCategory, ScoutResult> = {} as any;
@@ -569,7 +656,7 @@ export class Scout {
         category: cat,
         models,
         rankedModels,
-        eliteModels
+        eliteModels,
       };
     }
 
@@ -580,28 +667,35 @@ export class Scout {
    * Print summary of results
    */
   printSummary(results: Record<ModelCategory, ScoutResult>): void {
-    console.log('\n' + '='.repeat(60));
-    console.log('📈 Free Fleet v0.2.0 (Metadata Oracle) Discovery Results\n');
+    console.log("\n" + "=".repeat(60));
+    console.log("📈 Free Fleet v0.2.0 (Metadata Oracle) Discovery Results\n");
 
     for (const [category, result] of Object.entries(results)) {
-      console.log(`\n📈 ${category.toUpperCase()} (top ${Math.min(5, result.rankedModels.length)}):`);
+      console.log(
+        `\n📈 ${category.toUpperCase()} (top ${Math.min(5, result.rankedModels.length)}):`,
+      );
 
       result.rankedModels.slice(0, 5).forEach((model, i) => {
         const isElite = result.eliteModels.includes(model);
-        const providerTag = model.provider ? `[${model.provider.toUpperCase()}]` : '';
+        const providerTag = model.provider
+          ? `[${model.provider.toUpperCase()}]`
+          : "";
         const confidence = model.confidence || 0;
-        const confidenceBadge = confidence >= 1.0 ? '✅' : (confidence >= 0.7 ? '⚠️' : '✓');
-        console.log(`  ${i + 1}. ${providerTag}${model.id}${isElite ? ' ⭐ ELITE' : ''} [${confidence.toFixed(2)}] ${model.category?.toUpperCase()}`);
+        const confidenceBadge =
+          confidence >= 1.0 ? "✅" : confidence >= 0.7 ? "⚠️" : "✓";
+        console.log(
+          `  ${i + 1}. ${providerTag}${model.id}${isElite ? " ⭐ ELITE" : ""} [${confidence.toFixed(2)}] ${model.category?.toUpperCase()}`,
+        );
       });
     }
 
-    console.log('\n' + '='.repeat(60) + '\n');
+    console.log("\n" + "=".repeat(60) + "\n");
 
     // Print free tier breakdown by provider
     const providerStats = new Map<string, { total: number; free: number }>();
     for (const [category, result] of Object.entries(results)) {
       for (const model of result.models) {
-        const provider = model.provider || 'unknown';
+        const provider = model.provider || "unknown";
         if (!providerStats.has(provider)) {
           providerStats.set(provider, { total: 0, free: 0 });
         }
@@ -609,15 +703,17 @@ export class Scout {
         const stats = providerStats.get(provider);
         // Add check for undefined
         if (stats) {
-            stats.total++;
-            if (model.isFree) stats.free++;
+          stats.total++;
+          if (model.isFree) stats.free++;
         }
       }
     }
 
-    console.log('\n📊 Free Models by Provider (Metadata Oracle):');
+    console.log("\n📊 Free Models by Provider (Metadata Oracle):");
     for (const [provider, stats] of providerStats.entries()) {
-      console.log(`  ${provider}: ${stats.free}/${stats.total} (${((stats.free / stats.total) * 100).toFixed(1)}%) free`);
+      console.log(
+        `  ${provider}: ${stats.free}/${stats.total} (${((stats.free / stats.total) * 100).toFixed(1)}%) free`,
+      );
     }
   }
 
@@ -636,7 +732,9 @@ export class Scout {
       allowAntigravity: this.config.allowAntigravity || false,
       blocklist: Array.from(this.blocklist),
       hasMetadataOracle: true,
-      providersAvailable: Object.keys((await this.detectActiveProviders()).adapters)
+      providersAvailable: Object.keys(
+        (await this.detectActiveProviders()).adapters,
+      ),
     };
   }
 }

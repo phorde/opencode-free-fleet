@@ -61,6 +61,24 @@ export interface ProviderModel {
 }
 
 /**
+ * Provider configuration
+ */
+export interface ProviderConfig {
+  apiKey?: string;
+  baseUrl?: string;
+  [key: string]: any;
+}
+
+/**
+ * OpenCode configuration structure
+ */
+export interface OpenCodeConfig {
+  providers?: Record<string, ProviderConfig>;
+  categories?: Record<string, CategoryConfig>;
+  [key: string]: any;
+}
+
+/**
  * Provider Adapter interface
  */
 export interface ProviderAdapter {

@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "lastUpdated": "2026-01-31",
   "description": "Community-curated list of confirmed free models for OpenCode Free Fleet",
   "models": [
@@ -22,7 +22,14 @@
     "groq/llama-3.1-70b-versatile-instruct",
     "groq/mixtral-8x7b-instruct",
     "huggingface/Qwen/Qwen2.5-72B-Instruct-Turbo",
+    "modelscope/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
     "google/gemini-1.5-flash",
-    "google/gemini-1.5-flash-8b"
+    "google/gemini-1.5-flash-8b",
+    "cerebras/llama-3.1-8b-instruct",
+    "cerebras/llama-3.1-70b-instruct",
+    "openrouter/google/gemini-2.0-flash-lite-preview-02-05:free",
+    "openrouter/google/gemini-2.0-pro-exp-02-05:free",
+    "openrouter/qwen/qwen-turbo",
+    "openrouter/deepseek/deepseek-r1:free"
   ]
 }
