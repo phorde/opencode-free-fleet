@@ -11,7 +11,7 @@ Automatically ranks and competes free LLM models by benchmark performance from *
 | Badge                                                                                                                                   | Status     |
 | --------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | [![NPM Version](https://img.shields.io/npm/v/opencode-free-fleet?style=flat-square)](https://www.npmjs.com/package/opencode-free-fleet) | `v0.4.0`   |
-| [![License](https://img.shields.io/npm/l/opencode-free-fleet?style=flat-square)](https://opensource.org/licenses/MIT)                   | MIT        |
+| [![License](https://img.shields.io/github/license/phorde/opencode-free-fleet?style=flat-square)](https://opensource.org/licenses/MIT)   | MIT        |
 | [![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]()                                                  | ✅ Passing |
 | [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square)]()                                                 | TypeScript |
 

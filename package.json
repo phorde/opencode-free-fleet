@@ -25,6 +25,7 @@
     "name": "Phorde",
     "email": "phorde@hotmail.com"
   },
+  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^20.11.5",
