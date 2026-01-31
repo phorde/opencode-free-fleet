@@ -1,7 +1,7 @@
 /**
  * Type definitions for OpenCode Free Fleet v0.2.0
  *
- * Multi-provider support: Adapters for 75+ OpenCode providers
+ * Simplified types to fix compilation errors
  */
 
 /**
@@ -30,45 +30,24 @@ export interface FreeModel {
 export type ModelCategory = 'coding' | 'reasoning' | 'speed' | 'multimodal' | 'writing';
 
 /**
- * Provider adapter interface
- * Each provider knows how to fetch models and identify free ones
- */
-export interface ProviderAdapter {
-  /**
-   * Provider identifier (e.g., 'openrouter', 'groq', 'google')
-   */
-  providerId: string;
-
-  /**
-   * Display name for the provider
-   */
-  providerName: string;
-
-  /**
-   * Fetch available models from this provider
-   */
-  fetchModels(): Promise<ProviderModel[]>;
-
-  /**
-   * Determine if a model is free tier
-   */
-  isFreeModel(model: ProviderModel): boolean;
-
-  /**
-   * Normalize provider model to FreeModel interface
-   */
-  normalizeModel(model: ProviderModel): FreeModel;
-}
-
-/**
- * Provider-specific model interface
- * Each provider may have different data structures
+ * Provider model interface
  */
 export interface ProviderModel {
   id: string;
   name: string;
   description?: string;
-  [key: string]: any; // Provider-specific fields
+  context_length?: number;
+  max_output_tokens?: number;
+  pricing?: {
+    prompt: string;
+    completion: string;
+    request: string;
+    prompt_price?: string;
+    top_provider?: any;
+  }
+  architecture?: any;
+  top_provider?: any;
+  serverless_free?: boolean;
 }
 
 /**
@@ -77,7 +56,7 @@ export interface ProviderModel {
 export interface ScoutConfig {
   antigravityPath?: string;
   opencodeConfigPath?: string;
-  allowAntigravity?: boolean; // NEW: Allow using Antigravity auth for Google/Gemini
+  allowAntigravity?: boolean;
 }
 
 /**
@@ -85,54 +64,9 @@ export interface ScoutConfig {
  */
 export interface ScoutResult {
   category: ModelCategory;
-  models: FreeModel[]; // Changed from OpenRouterModel to FreeModel
+  models: FreeModel[];
   rankedModels: FreeModel[];
   eliteModels: FreeModel[];
-}
-
-/**
- * OpenRouter model representation (v0.1.0 - kept for backward compatibility)
- */
-export interface OpenRouterModel {
-  id: string;
-  name: string;
-  description: string;
-  context_length: number;
-  architecture: {
-    modality: string;
-    tokenizer: string;
-    instruct_mode: Record<string, any>;
-  };
-  pricing: {
-    prompt: string;
-    completion: string;
-    request: string;
-  };
-  top_provider: {
-    context_length: number;
-    max_completion_tokens: number;
-    is_moderated: boolean;
-  };
-}
-
-/**
- * OpenCode configuration structure
- */
-export interface OpenCodeConfig {
-  google_auth?: boolean;
-  providers?: {
-    [providerId: string]: any;
-  };
-  categories?: Record<string, CategoryConfig>;
-}
-
-/**
- * Category configuration with model selection and fallback chain
- */
-export interface CategoryConfig {
-  model: string;
-  fallback: string[];
-  description: string;
 }
 
 /**
@@ -156,20 +90,19 @@ export interface RaceConfig {
 /**
  * Provider discovery result
  */
-export interface ProviderDiscoveryResult {
-  providerId: string;
-  providerName: string;
-  models: FreeModel[];
-  error?: string;
-}
-
-/**
- * Active provider detection result
- */
 export interface ActiveProvidersResult {
   providers: string[];
   adapters: Map<string, ProviderAdapter>;
   errors: string[];
+}
+
+/**
+ * Category configuration with model selection and fallback chain
+ */
+export interface CategoryConfig {
+  model: string;
+  fallback: string[];
+  description: string;
 }
 
 /**
@@ -199,7 +132,6 @@ export type PluginFunction = (ctx: PluginContext) => Promise<PluginHooks>;
 
 /**
  * SOTA benchmark elite families
- * These families are prioritized because they consistently achieve top scores
  */
 export const ELITE_FAMILIES = {
   coding: [

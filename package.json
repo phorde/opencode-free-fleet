@@ -1,6 +1,6 @@
 {
   "name": "opencode-free-fleet",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - Automatically ranks and competes free LLM models by benchmark performance",
   "author": {
     "name": "Phorde",
@@ -31,11 +31,12 @@
     "src/version.ts"
   ],
   "dependencies": {
-    "@opencode-ai/plugin": "^1.1.0"
+    "@opencode-ai/plugin": "^1.1.0",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@types/node": "^20.11.5",
+    "@types/node": "^25.1.0",
     "@typescript-eslint/eslint-plugin": "8.47.0",
     "@typescript-eslint/parser": "8.47.0",
     "bun-types": "latest",
@@ -45,5 +46,12 @@
     "prettier": "^3.2.4",
     "typescript-eslint": "^8.47.0",
     "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "build": "bun run build:tsc",
+    "build:tsc": "bun scripts/build.ts",
+    "test": "bun test",
+    "publish": "bun publish --access public",
+    "prepublishOnly": "bun run build"
   }
 }

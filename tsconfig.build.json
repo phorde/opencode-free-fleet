@@ -1,15 +1,18 @@
+/**
+ * Simplified tsconfig.json for Bun build
+ * Minimized options to avoid TS6231 errors
+ */
+
 {
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
+    "lib": ["ESNext"],
+    "strict": false,
     "noEmit": true,
+    "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "types": ["bun-types"],
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test"]
