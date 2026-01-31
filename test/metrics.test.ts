@@ -14,6 +14,7 @@ describe("MetricsEngine", () => {
       mkdirSync: vi.fn(),
       writeFileSync: vi.fn(),
       readFileSync: vi.fn(),
+      renameSync: vi.fn(),
     };
     vi.mock("fs", () => ({ ...mockFs }));
     vi.mock("path", () => ({

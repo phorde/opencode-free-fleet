@@ -293,6 +293,7 @@ export class Scout {
             isElite,
             category: this.categorizeModel(providerModel.id, providerModel),
             confidence: modelMetadata.confidence || 0.5,
+            tier: isFreeViaProvider ? "CONFIRMED_FREE" : modelMetadata.tier,
           });
         }
 
@@ -300,7 +301,13 @@ export class Scout {
         const blocklist = await this.buildBlocklist();
         const filteredModels = enrichedModels.filter((model) => {
           const isBlocked = blocklist.has(model.provider);
-          return !isBlocked;
+          if (isBlocked) return false;
+
+          if (this.config.ultraFreeMode) {
+            return model.tier === "CONFIRMED_FREE" && model.confidence >= 0.9;
+          }
+
+          return true;
         });
 
         providerModels.set(providerId, filteredModels);

@@ -120,6 +120,8 @@ class OpenRouterAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }
@@ -223,6 +225,8 @@ class GroqAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }
@@ -326,6 +330,8 @@ class CerebrasAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }
@@ -432,6 +438,8 @@ class GoogleAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }
@@ -546,6 +554,8 @@ class DeepSeekAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }
@@ -643,6 +653,8 @@ class ModelScopeAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }
@@ -740,6 +752,8 @@ class HuggingFaceAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }
@@ -770,6 +784,8 @@ class BaseAdapter implements ProviderAdapter {
       isFree: false,
       isElite: false,
       category: "writing",
+      confidence: 0,
+      tier: "UNKNOWN",
     };
   }
 }
@@ -903,6 +919,8 @@ class GenericAdapter implements ProviderAdapter {
       isFree,
       isElite,
       category,
+      confidence: isFree ? 1.0 : 0.5,
+      tier: isFree ? "CONFIRMED_FREE" : "UNKNOWN",
     };
   }
 }

@@ -4,6 +4,15 @@
  * v0.3.0 - Added Live Update Mechanism (Community Source)
  */
 
+import { PersistenceManager } from "./persistence.js";
+import { PolicyScraperOrchestrator } from "./scraper.js";
+import { GroqScraper } from "./scrapers/groq.js";
+import { OpenRouterScraper } from "./scrapers/openrouter.js";
+import { CerebrasScraper } from "./scrapers/cerebras.js";
+import { CostTier } from "../types/index.js";
+import * as path from "path";
+import * as os from "os";
+
 /**
  * Remote community definitions URL
  */
@@ -72,6 +81,7 @@ export interface ModelMetadata {
   provider: string;
   name: string;
   isFree: boolean;
+  tier: CostTier;
   confidence: number; // 0-1: uncertain, 0.5-50: likely free, 1.0: confirmed free
   reason: string;
   lastVerified?: string;
@@ -136,6 +146,7 @@ class ModelsDevAdapter implements MetadataAdapter {
         provider: this.providerId,
         name: modelId,
         isFree: false,
+        tier: "CONFIRMED_PAID",
         confidence: 0,
         reason: "Model not found in Models.dev",
         pricing: { prompt: "0", completion: "0", request: "0" },
@@ -154,6 +165,7 @@ class ModelsDevAdapter implements MetadataAdapter {
       provider: this.providerId,
       name: model.name || model.id,
       isFree,
+      tier: isFree ? "CONFIRMED_FREE" : "CONFIRMED_PAID",
       confidence: isFree ? 1.0 : 0.7,
       reason: isFree
         ? `Confirmed free via Models.dev (prompt=${model.pricing?.prompt}, completion=${model.pricing?.completion})`
@@ -215,22 +227,56 @@ class ModelsDevAdapter implements MetadataAdapter {
   }
 }
 
+const CACHE_DIR = path.join(os.homedir(), ".config", "opencode", "cache");
+const CACHE_FILE = path.join(CACHE_DIR, "metadata.json");
+
 /**
  * Unified metadata oracle
  * Aggregates data from multiple metadata sources
  */
 export class MetadataOracle {
   private adapters: Map<string, MetadataAdapter> = new Map();
+  private persistentCache: Map<string, ModelMetadata> = new Map();
+  private scraper!: PolicyScraperOrchestrator;
 
   constructor() {
+    this._initializeScraper();
+    this._loadCache();
     this._initializeAdapters();
-    // Fire-and-forget fetch of remote definitions
+
     this.fetchRemoteDefinitions().catch((err) => {
       console.warn(
         "⚠️  Oracle: Failed to fetch remote definitions:",
         err.message,
       );
     });
+
+    this.scraper.scrapeAll().catch((err) => {
+      console.warn("⚠️  Oracle: Scraper failed:", err.message);
+    });
+  }
+
+  private _initializeScraper(): void {
+    this.scraper = new PolicyScraperOrchestrator();
+    this.scraper.registerScraper(new GroqScraper());
+    this.scraper.registerScraper(new OpenRouterScraper());
+    this.scraper.registerScraper(new CerebrasScraper());
+  }
+
+  private _loadCache(): void {
+    const cached =
+      PersistenceManager.readJSON<Record<string, ModelMetadata>>(CACHE_FILE);
+    if (cached) {
+      this.persistentCache = new Map(Object.entries(cached));
+      console.log(
+        `🔮 Metadata Oracle: Loaded ${this.persistentCache.size} models from disk cache`,
+      );
+    }
+  }
+
+  private _saveCache(): void {
+    const data = Object.fromEntries(this.persistentCache);
+    PersistenceManager.writeJSON(CACHE_FILE, data);
   }
 
   /**
@@ -318,24 +364,35 @@ export class MetadataOracle {
   ): Promise<ModelMetadata> {
     console.log(`\n🔮 Metadata Oracle: Fetching metadata for ${modelId}...\n`);
 
-    // 1. Check local/community confirmed list (Primary Source of Truth)
-    // Check exact ID match
-    if (CONFIRMED_FREE_MODELS.has(modelId)) {
-      return this._createConfirmedMetadata(modelId, "community-list");
+    const cached = this.persistentCache.get(modelId);
+    if (cached) {
+      console.log(`🔮 Metadata Oracle: Cache hit for ${modelId}`);
+      return cached;
     }
 
-    // Check provider-prefixed match (e.g. openrouter/vendor/model)
+    if (CONFIRMED_FREE_MODELS.has(modelId)) {
+      const metadata = this._createConfirmedMetadata(modelId, "community-list");
+      this.persistentCache.set(modelId, metadata);
+      this._saveCache();
+      return metadata;
+    }
+
     if (providerId) {
       const prefixedId = `${providerId}/${modelId}`;
       if (CONFIRMED_FREE_MODELS.has(prefixedId)) {
-        return this._createConfirmedMetadata(modelId, providerId);
+        const metadata = this._createConfirmedMetadata(modelId, providerId);
+        this.persistentCache.set(modelId, metadata);
+        this._saveCache();
+        return metadata;
       }
 
-      // Special case: 'openrouter' prefix often used in community list
       if (providerId !== "openrouter") {
         const openRouterId = `openrouter/${modelId}`;
         if (CONFIRMED_FREE_MODELS.has(openRouterId)) {
-          return this._createConfirmedMetadata(modelId, providerId);
+          const metadata = this._createConfirmedMetadata(modelId, providerId);
+          this.persistentCache.set(modelId, metadata);
+          this._saveCache();
+          return metadata;
         }
       }
     }
@@ -344,7 +401,11 @@ export class MetadataOracle {
 
     const allMetadata: ModelMetadata[] = [];
 
-    // Try each available adapter
+    const scrapedPolicy = providerId
+      ? this.scraper.getPolicy(providerId)
+      : undefined;
+    const isFreeViaScraper = scrapedPolicy?.freeModels.includes(modelId);
+
     for (const providerId of availableAdapters) {
       const adapter = this.adapters.get(providerId);
       if (!adapter) continue;
@@ -365,6 +426,7 @@ export class MetadataOracle {
         provider: "unknown",
         name: modelId,
         isFree: false,
+        tier: "UNKNOWN",
         confidence: 0,
         reason: "Model not found in any metadata source",
         pricing: { prompt: "0", completion: "0", request: "0" },
@@ -373,29 +435,42 @@ export class MetadataOracle {
 
     // Merge results with confidence scoring
     const freeResults = allMetadata.filter((m) => m.isFree);
-    const hasFreeResult = freeResults.length > 0;
+    const hasFreeResult = freeResults.length > 0 || isFreeViaScraper;
 
     // Determine overall confidence
     let confidence = 0.3; // Low confidence if no metadata
     let reason = "No metadata found";
+    let tier: CostTier = "UNKNOWN";
 
-    if (hasFreeResult) {
+    if (isFreeViaScraper) {
+      confidence = 1.0;
+      reason = `Confirmed free via autonomous policy scraper (${providerId})`;
+      tier = "CONFIRMED_FREE";
+    } else if (hasFreeResult) {
       confidence = 1.0; // High confidence if at least one source says free
       reason = `Confirmed free by ${freeResults.map((m) => m.provider).join(", ")}`;
+      tier = "CONFIRMED_FREE";
     } else if (allMetadata.length > 0) {
       confidence = 0.7; // Medium confidence if metadata exists but no free result
       reason = `Metadata found but not confirmed free (providers: ${allMetadata.map((m) => m.provider).join(", ")})`;
+      tier = "CONFIRMED_PAID";
     }
 
     // Return first free result (highest confidence)
     const finalMetadata = hasFreeResult ? freeResults[0] : allMetadata[0];
 
-    return {
+    const result: ModelMetadata = {
       ...finalMetadata,
       confidence,
       reason,
+      tier,
       lastVerified: new Date().toISOString(),
     };
+
+    this.persistentCache.set(modelId, result);
+    this._saveCache();
+
+    return result;
   }
 
   /**
@@ -444,6 +519,7 @@ export class MetadataOracle {
       provider: "community-list", // Standardized provider ID for community source
       name: modelId,
       isFree: true,
+      tier: "CONFIRMED_FREE",
       confidence: 1.0,
       reason: `Confirmed free by Community List (via ${source})`,
       lastVerified: new Date().toISOString(),
