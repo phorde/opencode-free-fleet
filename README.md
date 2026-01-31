@@ -382,9 +382,6 @@ interface RaceConfig {
 ```bash
 # Install from public registry
 npm install opencode-free-fleet
-
-# Or install from local directory
-npm install file:~/Projetos/opencode-free-fleet
 ```
 
 ### Local Development
