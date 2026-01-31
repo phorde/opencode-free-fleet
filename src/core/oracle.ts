@@ -9,6 +9,7 @@ import { PolicyScraperOrchestrator } from "./scraper.js";
 import { GroqScraper } from "./scrapers/groq.js";
 import { OpenRouterScraper } from "./scrapers/openrouter.js";
 import { CerebrasScraper } from "./scrapers/cerebras.js";
+import { DaemonClient } from "./daemon-client.js";
 import { CostTier } from "../types/index.js";
 import * as path from "path";
 import * as os from "os";
@@ -363,6 +364,17 @@ export class MetadataOracle {
     providerId?: string,
   ): Promise<ModelMetadata> {
     console.log(`\n🔮 Metadata Oracle: Fetching metadata for ${modelId}...\n`);
+
+    const isDaemonAvailable = await DaemonClient.isAvailable();
+    if (isDaemonAvailable) {
+      console.log(`🔮 Metadata Oracle: Delegating to Fleet Daemon...`);
+      const daemonMeta = await DaemonClient.getMetadata(modelId);
+      if (daemonMeta) {
+        this.persistentCache.set(modelId, daemonMeta);
+        this._saveCache();
+        return daemonMeta;
+      }
+    }
 
     const cached = this.persistentCache.get(modelId);
     if (cached) {
