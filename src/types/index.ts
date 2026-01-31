@@ -28,7 +28,12 @@ export interface FreeModel {
 /**
  * Model category identifiers
  */
-export type ModelCategory = 'coding' | 'reasoning' | 'speed' | 'multimodal' | 'writing';
+export type ModelCategory =
+  | "coding"
+  | "reasoning"
+  | "speed"
+  | "multimodal"
+  | "writing";
 
 /**
  * Provider model interface
@@ -45,7 +50,7 @@ export interface ProviderModel {
     request: string;
     prompt_price?: string;
     top_provider?: any;
-  }
+  };
   architecture?: any;
   top_provider?: any;
   serverless_free?: boolean;
@@ -101,7 +106,15 @@ export interface RaceResult<T = unknown> {
 export interface RaceConfig {
   timeoutMs?: number;
   abortController?: AbortController;
-  onProgress?: (model: string, status: 'started' | 'completed' | 'failed', error?: Error) => void;
+  onProgress?: (
+    model: string,
+    status: "started" | "completed" | "failed",
+    error?: Error,
+  ) => void;
+  mode?: FleetMode;
+  fallbackEnabled?: boolean;
+  fallbackDepth?: number;
+  onFallback?: (attempt: number, models: string[]) => void;
 }
 
 /**
@@ -148,51 +161,108 @@ export interface PluginHooks {
 export type PluginFunction = (ctx: PluginContext) => Promise<PluginHooks>;
 
 /**
+ * Fleet configuration modes (v0.4.0)
+ */
+export type FleetMode = "ultra_free" | "SOTA_only" | "balanced";
+
+/**
+ * Task types for delegation routing (v0.4.0)
+ */
+export type TaskType =
+  | "code_generation"
+  | "code_review"
+  | "debugging"
+  | "reasoning"
+  | "math"
+  | "writing"
+  | "summarization"
+  | "translation"
+  | "multimodal"
+  | "general";
+
+/**
+ * Delegation configuration (v0.4.0)
+ */
+export interface DelegationConfig {
+  mode: FleetMode;
+  raceCount: number; // Default: 5, ultra_free ignores this
+  transparentMode: boolean; // Auto-delegate without /commands
+  fallbackDepth: number; // -1 for unlimited (ultra_free)
+  taskTypeOverrides?: Partial<Record<TaskType, FleetMode>>;
+}
+
+/**
+ * Model metrics tracking (v0.4.0)
+ */
+export interface ModelMetrics {
+  modelId: string;
+  totalCalls: number;
+  successCount: number;
+  failureCount: number;
+  avgLatencyMs: number;
+  totalTokensUsed: number;
+  lastUsed: Date;
+}
+
+/**
+ * Session metrics (v0.4.0)
+ */
+export interface SessionMetrics {
+  sessionId: string;
+  startTime: Date;
+  delegationCount: number;
+  tokensSaved: number; // vs using paid model
+  costSaved: number; // Estimated $ saved
+  modelBreakdown: Map<string, ModelMetrics>;
+}
+
+/**
+ * Delegation result (v0.4.0)
+ */
+export interface DelegationResult<T = unknown> {
+  success: boolean;
+  taskType: TaskType;
+  category: ModelCategory;
+  winner: string;
+  result: T;
+  latencyMs: number;
+  modelsRaced: number;
+}
+
+/**
  * SOTA benchmark elite families
  */
 export const ELITE_FAMILIES = {
   coding: [
-    'qwen-2.5-coder',
-    'qwen3-coder',
-    'deepseek-coder',
-    'deepseek-v3',
-    'llama-3.3-70b',
-    'llama-3.3',
-    'codestral',
-    'starcoder'
+    "qwen-2.5-coder",
+    "qwen3-coder",
+    "deepseek-coder",
+    "deepseek-v3",
+    "llama-3.3-70b",
+    "llama-3.3",
+    "codestral",
+    "starcoder",
   ],
   reasoning: [
-    'deepseek-r1',
-    'deepseek-reasoner',
-    'qwq',
-    'qwq-32b',
-    'o1-open',
-    'o3-mini',
-    'reasoning',
-    'r1'
+    "deepseek-r1",
+    "deepseek-reasoner",
+    "qwq",
+    "qwq-32b",
+    "o1-open",
+    "o3-mini",
+    "reasoning",
+    "r1",
   ],
   speed: [
-    'mistral-small',
-    'haiku',
-    'flash',
-    'gemma-2',
-    'gemma-3',
-    'distill',
-    'nano',
-    'lite'
+    "mistral-small",
+    "haiku",
+    "flash",
+    "gemma-2",
+    "gemma-3",
+    "distill",
+    "nano",
+    "lite",
   ],
-  multimodal: [
-    'vl',
-    'vision',
-    'molmo',
-    'nemotron-vl',
-    'pixtral',
-    'qwen-vl'
-  ],
-  writing: [
-    'trinity',
-    'qwen-next',
-    'chimera',
-    'writer'
-  ]
+  multimodal: ["vl", "vision", "molmo", "nemotron-vl", "pixtral", "qwen-vl"],
+  writing: ["trinity", "qwen-next", "chimera", "writer"],
 } as const;

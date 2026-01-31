@@ -12,10 +12,7 @@
  * - Error aggregation for all failures
  */
 
-import type {
-  RaceResult,
-  RaceConfig
-} from '../types/index.js';
+import type { RaceResult, RaceConfig } from "../types/index.js";
 
 /**
  * Racer class for competing free models
@@ -27,7 +24,7 @@ export class FreeModelRacer {
   constructor(config: RaceConfig = {}) {
     this.config = {
       timeoutMs: 30000,
-      ...config
+      ...config,
     };
   }
 
@@ -66,13 +63,15 @@ export class FreeModelRacer {
   async race<T>(
     models: string[],
     executeWithModel: (model: string) => Promise<T>,
-    raceId: string = `race-${Date.now()}`
+    raceId: string = `race-${Date.now()}`,
   ): Promise<RaceResult<T>> {
     if (models.length === 0) {
-      throw new Error('Racer: No models provided for competition');
+      throw new Error("Racer: No models provided for competition");
     }
 
-    console.log(`🏁 Racer: Starting race '${raceId}' with ${models.length} models`);
+    console.log(
+      `🏁 Racer: Starting race '${raceId}' with ${models.length} models`,
+    );
 
     // Create abort controller for this race
     const abortController = new AbortController();
@@ -84,29 +83,34 @@ export class FreeModelRacer {
       const racePromises = models.map(async (model) => {
         try {
           // Notify started
-          this.config.onProgress?.(model, 'started');
+          this.config.onProgress?.(model, "started");
 
           const result = await Promise.race([
             executeWithModel(model),
-            this.createTimeoutPromise(this.config.timeoutMs!, abortController.signal)
+            this.createTimeoutPromise(
+              this.config.timeoutMs!,
+              abortController.signal,
+            ),
           ]);
 
           const duration = performance.now() - startTime;
 
           // Notify completed
-          this.config.onProgress?.(model, 'completed');
+          this.config.onProgress?.(model, "completed");
 
-          console.log(`✅ Racer: ${model} completed in ${duration.toFixed(0)}ms`);
+          console.log(
+            `✅ Racer: ${model} completed in ${duration.toFixed(0)}ms`,
+          );
 
           return { model, result, duration };
         } catch (error) {
           const err = error as Error;
 
           // Notify failed
-          this.config.onProgress?.(model, 'failed', err);
+          this.config.onProgress?.(model, "failed", err);
 
           // Check if aborted
-          if (err.name === 'AbortError') {
+          if (err.name === "AbortError") {
             console.log(`⏹️  Racer: ${model} aborted`);
           } else {
             console.log(`❌ Racer: ${model} failed - ${err.message}`);
@@ -122,8 +126,10 @@ export class FreeModelRacer {
       abortController.abort();
       this.activeRaces.delete(raceId);
 
-      console.log(`🏆 Racer: Winner is ${winner.model} (${winner.duration.toFixed(0)}ms)`);
-      console.log(`   Competed against: ${models.join(', ')}`);
+      console.log(
+        `🏆 Racer: Winner is ${winner.model} (${winner.duration.toFixed(0)}ms)`,
+      );
+      console.log(`   Competed against: ${models.join(", ")}`);
 
       return winner;
     } catch (error) {
@@ -133,15 +139,15 @@ export class FreeModelRacer {
       // AggregateError: all models failed
       const err = error as any;
 
-      if (err.name === 'AggregateError' && err.errors) {
-        const errorDetails = err.errors.map((e: any) => e.message).join('\n');
+      if (err.name === "AggregateError" && err.errors) {
+        const errorDetails = err.errors.map((e: any) => e.message).join("\n");
         throw new Error(
-          `Racer: All ${models.length} models failed:\n${errorDetails}`
+          `Racer: All ${models.length} models failed:\n${errorDetails}`,
         );
       }
 
       // Check if race was externally aborted
-      if (err.name === 'AbortError') {
+      if (err.name === "AbortError") {
         console.log(`🛑 Racer: Race '${raceId}' externally aborted`);
         throw new Error(`was aborted`);
       }
@@ -156,10 +162,63 @@ export class FreeModelRacer {
   async raceFromCategory<T>(
     categoryConfig: { model: string; fallback: string[] },
     executeWithModel: (model: string) => Promise<T>,
-    raceId?: string
+    raceId?: string,
   ): Promise<RaceResult<T>> {
     const allModels = [categoryConfig.model, ...categoryConfig.fallback];
     return this.race(allModels, executeWithModel, raceId);
+  }
+
+  async raceWithFallback<T>(
+    primaryModels: string[],
+    fallbackModels: string[],
+    executeWithModel: (model: string) => Promise<T>,
+    raceId?: string,
+  ): Promise<RaceResult<T>> {
+    let attempt = 0;
+    let currentModels = primaryModels;
+    let remainingFallback = [...fallbackModels];
+
+    const maxAttempts =
+      this.config.fallbackDepth === -1
+        ? Infinity
+        : this.config.fallbackDepth || 3;
+
+    console.log(
+      `🔄 Racer: Starting fallback race '${raceId}' (max: ${maxAttempts === Infinity ? "unlimited" : maxAttempts})`,
+    );
+
+    while (attempt < maxAttempts) {
+      try {
+        return await this.race(
+          currentModels,
+          executeWithModel,
+          `${raceId}-attempt-${attempt}`,
+        );
+      } catch (error) {
+        attempt++;
+        this.config.onFallback?.(attempt, currentModels);
+
+        if (remainingFallback.length === 0) {
+          throw new Error(
+            `All fallback attempts exhausted after ${attempt} tries`,
+          );
+        }
+
+        const batchSize =
+          this.config.mode === "ultra_free"
+            ? remainingFallback.length
+            : Math.min(5, remainingFallback.length);
+
+        currentModels = remainingFallback.slice(0, batchSize);
+        remainingFallback = remainingFallback.slice(batchSize);
+
+        console.log(
+          `🔄 Racer: Fallback attempt ${attempt} with ${currentModels.length} models`,
+        );
+      }
+    }
+
+    throw new Error(`Max fallback attempts (${maxAttempts}) exceeded`);
   }
 
   /**
@@ -204,16 +263,23 @@ export class FreeModelRacer {
   /**
    * Create a timeout promise that rejects when abort signal is received
    */
-  private createTimeoutPromise(timeoutMs: number, signal: AbortSignal): Promise<never> {
+  private createTimeoutPromise(
+    timeoutMs: number,
+    signal: AbortSignal,
+  ): Promise<never> {
     return new Promise((_, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error('Timeout'));
+        reject(new Error("Timeout"));
       }, timeoutMs);
 
-      signal.addEventListener('abort', () => {
-        clearTimeout(timeout);
-        reject(new Error('AbortError'));
-      }, { once: true });
+      signal.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timeout);
+          reject(new Error("AbortError"));
+        },
+        { once: true },
+      );
     });
   }
 
@@ -245,7 +311,7 @@ export class FreeModelRacer {
 export async function competeFreeModels<T>(
   models: string[],
   executeWithModel: (model: string) => Promise<T>,
-  config?: RaceConfig
+  config?: RaceConfig,
 ): Promise<RaceResult<T>> {
   const racer = new FreeModelRacer(config);
   return racer.race(models, executeWithModel);
