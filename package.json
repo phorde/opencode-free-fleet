@@ -1,7 +1,7 @@
 {
   "name": "opencode-free-fleet",
-  "version": "0.4.2",
-  "description": "Economic Load Balancing, Task Delegation, and Zero-Cost Model Discovery for OpenCode - v0.4.0",
+  "version": "0.5.0",
+  "description": "Economic Load Balancing, Task Delegation, and Zero-Cost Model Discovery for OpenCode - v0.5.0",
   "keywords": [
     "opencode",
     "llm",
@@ -19,7 +19,9 @@
     "ultra-free-mode",
     "task-delegation",
     "metrics",
-    "v0.4.0"
+    "v0.5.0",
+    "persistence",
+    "scraping"
   ],
   "author": {
     "name": "Phorde",

@@ -1,7 +1,0 @@
-{
-  "providers": {
-    "openrouter": {
-      "apiKey": "sk-dummy-key-for-public-list"
-    }
-  }
-}

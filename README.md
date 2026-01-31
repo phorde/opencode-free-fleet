@@ -9,7 +9,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge&labelColor=000000)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=for-the-badge&labelColor=000000)]()
 
-Automatically ranks and competes free LLM models by benchmark performance from **75+ OpenCode providers** using SOTA benchmarks and metadata oracles.
+Automatically ranks and competes free LLM models by benchmark performance from **75+ OpenCode providers** using SOTA benchmarks, persistent metadata oracles, and autonomous policy scrapers.
 
 </div>
 
@@ -33,6 +33,17 @@ Automatically ranks and competes free LLM models by benchmark performance from *
 - ✅ **Intelligent Blocklist** - Blocks Google/Gemini when Antigravity is active (respects `allowAntigravity` flag)
 - ✅ **SOTA Benchmark Ranking** - Elite families prioritized by benchmark performance
 - ✅ **Functional Categorization** - Coding, Reasoning, Speed, Multimodal, Writing
+
+### 📊 Intelligence Foundation (NEW in v0.5.0)
+
+**Persistent Metadata & Cost Taxonomy:**
+
+- ✅ **Persistent Cache** - Model metadata is cached locally to speed up boot time (FR-001)
+- ✅ **Cost Taxonomy** - 4-tier cost categorization: `CONFIRMED_FREE`, `FREEMIUM_LIMITED`, `UNKNOWN`, `CONFIRMED_PAID` (FR-002)
+- ✅ **Autonomous Policy Scraping** - Background scrapers for Groq, OpenRouter, and Cerebras verify pricing in real-time (FR-003)
+- ✅ **Safety-First Validation** - Strict 90% confidence threshold for `ultra_free` mode
+
+**Cache Location:** `~/.config/opencode/cache/metadata.json`
 
 ### 🎯 Task-Type Delegation (NEW in v0.4.0)
 
@@ -439,7 +450,13 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 
 ## 📝 Version History
 
-- **0.4.0** (Current) - Task Delegation & Metrics
+- **0.5.0** (Current) - Intelligence Foundation
+  - ✅ **Persistent Cache** - Local storage for model metadata
+  - ✅ **Cost Taxonomy** - 4-tier cost categorization
+  - ✅ **Autonomous Scrapers** - Background verification of provider pricing
+  - ✅ **Safety-First Validation** - High-confidence filtering in ultra-free mode
+
+- **0.4.0** (Previous) - Task Delegation & Metrics
   - ✅ **Task Type Delegation** - Intelligent routing for 10+ task types
   - ✅ **Fallback Chains** - Unlimited retries with configurable strategies
   - ✅ **Metrics Engine** - Track tokens saved, latency, and success rates
