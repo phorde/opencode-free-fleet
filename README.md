@@ -482,6 +482,6 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 
 ---
 
-**Made with ❤️ by [Phorde](mailto:consultorio@phorde.com.br)**
+**Made with ❤️ by [Phorde](mailto:phorde@hotmail.com)**
 
 **Repository:** https://github.com/phorde/opencode-free-fleet

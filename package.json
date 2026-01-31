@@ -4,7 +4,7 @@
   "description": "Economic Load Balancing and Zero-Cost Model Discovery for OpenCode - v0.3.0 Release",
   "author": {
     "name": "Phorde",
-    "email": "consultorio@phorde.com.br"
+    "email": "phorde@hotmail.com"
   },
   "type": "module",
   "main": "./dist/index.js",

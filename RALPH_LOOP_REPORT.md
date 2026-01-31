@@ -327,7 +327,7 @@ expect(newConfig.timeoutMs).toBe(9999);
 **Version**: 0.3.0  
 **License**: MIT  
 **Repository**: https://github.com/phorde/opencode-free-fleet  
-**Author**: Phorde <consultorio@phorde.com.br>
+**Author**: Phorde <phorde@hotmail.com>
 
 **Keywords**:
 
