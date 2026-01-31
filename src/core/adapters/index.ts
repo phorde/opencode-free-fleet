@@ -3,89 +3,25 @@
  *
  * Each adapter knows how to fetch models and identify free tier models
  * for a specific provider.
+ *
+ * v0.2.1 - Build Repair: Removed dynamic imports
  */
 
-import type {
+import {
   ProviderAdapter,
   ProviderModel,
-  FreeModel
-} from '../types/index.js';
-
-/**
- * Base Provider Adapter
- * Default implementation for providers without special free tier logic
- */
-export abstract class BaseAdapter implements ProviderAdapter {
-  readonly providerId: string;
-  readonly providerName: string;
-
-  constructor(providerId: string, providerName: string) {
-    this.providerId = providerId;
-    this.providerName = providerName;
-  }
-
-  abstract fetchModels(): Promise<ProviderModel[]>;
-
-  /**
-   * Default free tier detection
-   * Override in provider-specific adapters
-   */
-  isFreeModel(model: ProviderModel): boolean {
-    // Default: assume not free unless explicitly marked
-    return model.pricing?.prompt === '0' || model.pricing?.completion === '0';
-  }
-
-  normalizeModel(model: ProviderModel): FreeModel {
-    const isFree = this.isFreeModel(model);
-
-    // Determine category
-    const id = model.id.toLowerCase();
-    let category: 'coding' | 'reasoning' | 'speed' | 'multimodal' | 'writing' = 'writing';
-
-    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
-      category = 'coding';
-    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
-      category = 'reasoning';
-    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
-      category = 'speed';
-    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
-      category = 'multimodal';
-    }
-
-    // Determine if elite
-    const { ELITE_FAMILIES } = require('../types/index.js');
-    const elitePatterns = ELITE_FAMILIES[category] || [];
-    const isElite = elitePatterns.some((pattern: string) =>
-      id.includes(pattern.toLowerCase())
-    );
-
-    return {
-      id: model.id,
-      provider: this.providerId,
-      name: model.name || model.id.split('/')[1],
-      description: model.description,
-      contextLength: model.context_length,
-      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
-      pricing: {
-        prompt: model.pricing?.prompt || '0',
-        completion: model.pricing?.completion || '0',
-        request: model.pricing?.request || '0'
-      },
-      isFree,
-      isElite,
-      category
-    };
-  }
-}
+  FreeModel,
+  ELITE_FAMILIES,
+  ModelCategory
+} from '../../types/index.js';
 
 /**
  * OpenRouter Adapter
  * All models with pricing.prompt === "0" AND pricing.completion === "0" are free
  */
-export class OpenRouterAdapter extends BaseAdapter {
-  constructor() {
-    super('openrouter', 'OpenRouter');
-  }
+class OpenRouterAdapter implements ProviderAdapter {
+  readonly providerId = 'openrouter';
+  readonly providerName = 'OpenRouter';
 
   async fetchModels(): Promise<ProviderModel[]> {
     console.log('🔗 OpenRouter: Fetching models...');
@@ -120,16 +56,56 @@ export class OpenRouterAdapter extends BaseAdapter {
     const isFreeCompletion = model.pricing?.completion === '0' || model.pricing?.completion === '0.0';
     return isFreePrompt && isFreeCompletion;
   }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    const isFree = this.isFreeModel(model);
+
+    // Determine category
+    const id = model.id.toLowerCase();
+    let category: ModelCategory = 'writing';
+
+    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      category = 'coding';
+    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      category = 'reasoning';
+    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      category = 'speed';
+    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      category = 'multimodal';
+    }
+
+    // Determine if elite
+    const elitePatterns = ELITE_FAMILIES[category] || [];
+    const isElite = elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase())
+    );
+
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name || model.id.split('/')[1],
+      description: model.description,
+      contextLength: model.context_length,
+      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
+      pricing: {
+        prompt: model.pricing?.prompt || '0',
+        completion: model.pricing?.completion || '0',
+        request: model.pricing?.request || '0'
+      },
+      isFree,
+      isElite,
+      category
+    };
+  }
 }
 
 /**
  * Groq Adapter
  * Currently (as of 2026), most Groq models are free
  */
-export class GroqAdapter extends BaseAdapter {
-  constructor() {
-    super('groq', 'Groq');
-  }
+class GroqAdapter implements ProviderAdapter {
+  readonly providerId = 'groq';
+  readonly providerName = 'Groq';
 
   async fetchModels(): Promise<ProviderModel[]> {
     console.log('🚀 Groq: Fetching models...');
@@ -152,7 +128,6 @@ export class GroqAdapter extends BaseAdapter {
       name: model.name,
       description: model.description,
       context_length: model.context_length,
-      architecture: model.architecture,
       pricing: model.pricing || {},
       top_provider: null
     }));
@@ -162,16 +137,56 @@ export class GroqAdapter extends BaseAdapter {
     // Groq: Assume all models are free (current policy)
     return true;
   }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    const isFree = this.isFreeModel(model);
+
+    // Determine category
+    const id = model.id.toLowerCase();
+    let category: ModelCategory = 'writing';
+
+    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      category = 'coding';
+    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      category = 'reasoning';
+    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      category = 'speed';
+    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      category = 'multimodal';
+    }
+
+    // Determine if elite
+    const elitePatterns = ELITE_FAMILIES[category] || [];
+    const isElite = elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase())
+    );
+
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name || model.id.split('/')[1],
+      description: model.description,
+      contextLength: model.context_length,
+      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
+      pricing: {
+        prompt: model.pricing?.prompt || '0',
+        completion: model.pricing?.completion || '0',
+        request: model.pricing?.request || '0'
+      },
+      isFree,
+      isElite,
+      category
+    };
+  }
 }
 
 /**
  * Cerebras Adapter
  * All models are currently free
  */
-export class CerebrasAdapter extends BaseAdapter {
-  constructor() {
-    super('cerebras', 'Cerebras');
-  }
+class CerebrasAdapter implements ProviderAdapter {
+  readonly providerId = 'cerebras';
+  readonly providerName = 'Cerebras';
 
   async fetchModels(): Promise<ProviderModel[]> {
     console.log('⚡ Cerebras: Fetching models...');
@@ -194,7 +209,6 @@ export class CerebrasAdapter extends BaseAdapter {
       name: model.name,
       description: model.description,
       context_length: model.context_length || model.context_window,
-      architecture: model.architecture,
       pricing: model.pricing || {},
       top_provider: null
     }));
@@ -204,16 +218,56 @@ export class CerebrasAdapter extends BaseAdapter {
     // Cerebras: Assume all models are free (current policy)
     return true;
   }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    const isFree = this.isFreeModel(model);
+
+    // Determine category
+    const id = model.id.toLowerCase();
+    let category: ModelCategory = 'writing';
+
+    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      category = 'coding';
+    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      category = 'reasoning';
+    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      category = 'speed';
+    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      category = 'multimodal';
+    }
+
+    // Determine if elite
+    const elitePatterns = ELITE_FAMILIES[category] || [];
+    const isElite = elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase())
+    );
+
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name || model.id.split('/')[1],
+      description: model.description,
+      contextLength: model.context_length || model.context_window,
+      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
+      pricing: {
+        prompt: model.pricing?.prompt || '0',
+        completion: model.pricing?.completion || '0',
+        request: model.pricing?.request || '0'
+      },
+      isFree,
+      isElite,
+      category
+    };
+  }
 }
 
 /**
  * Google Adapter
- * Free models are limited (Gemini Flash, Gemini Nano)
+ * Free models are limited (Gemini Flash, Nano)
  */
-export class GoogleAdapter extends BaseAdapter {
-  constructor() {
-    super('google', 'Google');
-  }
+class GoogleAdapter implements ProviderAdapter {
+  readonly providerId = 'google';
+  readonly providerName = 'Google';
 
   async fetchModels(): Promise<ProviderModel[]> {
     console.log('🔵 Google: Fetching models...');
@@ -248,16 +302,56 @@ export class GoogleAdapter extends BaseAdapter {
     const isFreeCompletion = model.pricing?.completion === '0' || model.pricing?.completion === '0.0';
     return isFreePrompt && isFreeCompletion;
   }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    const isFree = this.isFreeModel(model);
+
+    // Determine category
+    const id = model.id.toLowerCase();
+    let category: ModelCategory = 'writing';
+
+    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      category = 'coding';
+    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      category = 'reasoning';
+    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      category = 'speed';
+    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      category = 'multimodal';
+    }
+
+    // Determine if elite
+    const elitePatterns = ELITE_FAMILIES[category] || [];
+    const isElite = elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase())
+    );
+
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name || model.id.split('/')[1],
+      description: model.description,
+      contextLength: model.context_length,
+      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
+      pricing: {
+        prompt: model.pricing?.prompt || '0',
+        completion: model.pricing?.completion || '0',
+        request: model.pricing?.request || '0'
+      },
+      isFree,
+      isElite,
+      category
+    };
+  }
 }
 
 /**
  * DeepSeek Adapter
  * DeepSeek-V3.2 has 5M free tokens
  */
-export class DeepSeekAdapter extends BaseAdapter {
-  constructor() {
-    super('deepseek', 'DeepSeek');
-  }
+class DeepSeekAdapter implements ProviderAdapter {
+  readonly providerId = 'deepseek';
+  readonly providerName = 'DeepSeek';
 
   async fetchModels(): Promise<ProviderModel[]> {
     console.log('🟣 DeepSeek: Fetching models...');
@@ -291,24 +385,63 @@ export class DeepSeekAdapter extends BaseAdapter {
 
   isFreeModel(model: ProviderModel): boolean {
     // DeepSeek: Check if marked as free or known free model
-    const knownFreeModels = ['deepseek-chat', 'deepseek-coder', 'deepseek-v3', 'deepseek-v3.2'];
+    const knownFreeModels = ['deepseek-chat', 'deepseek-coder', 'deepseek-v3', 'deepseek-r1'];
     const modelId = model.id.toLowerCase();
-
     return knownFreeModels.some(freeModel => modelId.includes(freeModel));
+  }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    const isFree = this.isFreeModel(model);
+
+    // Determine category
+    const id = model.id.toLowerCase();
+    let category: ModelCategory = 'writing';
+
+    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      category = 'coding';
+    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      category = 'reasoning';
+    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      category = 'speed';
+    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      category = 'multimodal';
+    }
+
+    // Determine if elite
+    const elitePatterns = ELITE_FAMILIES[category] || [];
+    const isElite = elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase())
+    );
+
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name || model.id.split('/')[1],
+      description: model.description,
+      contextLength: model.context_length || model.max_context_tokens,
+      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
+      pricing: {
+        prompt: model.pricing?.prompt || '0',
+        completion: model.pricing?.completion || '0',
+        request: model.pricing?.request || '0'
+      },
+      isFree,
+      isElite,
+      category
+    };
   }
 }
 
 /**
  * ModelScope Adapter
- * Some free models available
+ * Some free serverless inference models
  */
-export class ModelScopeAdapter extends BaseAdapter {
-  constructor() {
-    super('modelscope', 'ModelScope');
-  }
+class ModelScopeAdapter implements ProviderAdapter {
+  readonly providerId = 'modelscope';
+  readonly providerName = 'ModelScope';
 
   async fetchModels(): Promise<ProviderModel[]> {
-    console.log('🔬 ModelScope: Fetching models...');
+    console.log('🔬 ModelScope: Fetching free serverless models...');
 
     // Note: This requires authentication
     // For now, return a placeholder list
@@ -316,7 +449,7 @@ export class ModelScopeAdapter extends BaseAdapter {
       {
         id: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
         name: 'Meta Llama 3.1 70B',
-        description: 'Llama 3.1 with 128K context (Free Tier)',
+        description: 'Llama 3.1 with 128K context (Serverless Free)',
         context_length: 128000,
         pricing: { prompt: '0', completion: '0', request: '0' }
       }
@@ -328,10 +461,49 @@ export class ModelScopeAdapter extends BaseAdapter {
   }
 
   isFreeModel(model: ProviderModel): boolean {
-    // ModelScope: Check if explicitly marked as free
-    const isFreePrompt = model.pricing?.prompt === '0' || model.pricing?.prompt === '0.0';
-    const isFreeCompletion = model.pricing?.completion === '0' || model.pricing?.completion === '0.0';
-    return isFreePrompt && isFreeCompletion;
+    // ModelScope: Check if marked as serverless free
+    return model.serverless_free === true || model.pricing?.prompt === '0';
+  }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    const isFree = this.isFreeModel(model);
+
+    // Determine category
+    const id = model.id.toLowerCase();
+    let category: ModelCategory = 'writing';
+
+    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      category = 'coding';
+    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      category = 'reasoning';
+    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      category = 'speed';
+    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      category = 'multimodal';
+    }
+
+    // Determine if elite
+    const elitePatterns = ELITE_FAMILIES[category] || [];
+    const isElite = elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase())
+    );
+
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name || model.id.split('/')[1],
+      description: model.description,
+      contextLength: model.context_length,
+      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
+      pricing: {
+        prompt: model.pricing?.prompt || '0',
+        completion: model.pricing?.completion || '0',
+        request: model.pricing?.request || '0'
+      },
+      isFree,
+      isElite,
+      category
+    };
   }
 }
 
@@ -339,10 +511,9 @@ export class ModelScopeAdapter extends BaseAdapter {
  * Hugging Face Adapter
  * Some free serverless inference models
  */
-export class HuggingFaceAdapter extends BaseAdapter {
-  constructor() {
-    super('huggingface', 'Hugging Face');
-  }
+class HuggingFaceAdapter implements ProviderAdapter {
+  readonly providerId = 'huggingface';
+  readonly providerName = 'Hugging Face';
 
   async fetchModels(): Promise<ProviderModel[]> {
     console.log('🤗 Hugging Face: Fetching free serverless models...');
@@ -351,7 +522,7 @@ export class HuggingFaceAdapter extends BaseAdapter {
     // For now, return a placeholder list
     const freeModels = [
       {
-        id: 'Qwen/Qwen2.5-72B-Instruct',
+        id: 'Qwen/Qwen2.5-72B-Instruct-Turbo',
         name: 'Qwen 2.5 72B',
         description: 'Qwen 2.5 with 128K context (Serverless Free)',
         context_length: 128000,
@@ -368,13 +539,81 @@ export class HuggingFaceAdapter extends BaseAdapter {
     // Hugging Face: Check if marked as serverless free
     return model.serverless_free === true || model.pricing?.prompt === '0';
   }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    const isFree = this.isFreeModel(model);
+
+    // Determine category
+    const id = model.id.toLowerCase();
+    let category: ModelCategory = 'writing';
+
+    if (id.includes('coder') || id.includes('code') || id.includes('function')) {
+      category = 'coding';
+    } else if (id.includes('r1') || id.includes('reasoning') || id.includes('cot') || id.includes('qwq')) {
+      category = 'reasoning';
+    } else if (id.includes('flash') || id.includes('distill') || id.includes('nano') || id.includes('lite')) {
+      category = 'speed';
+    } else if (id.includes('vl') || id.includes('vision') || id.includes('molmo')) {
+      category = 'multimodal';
+    }
+
+    // Determine if elite
+    const elitePatterns = ELITE_FAMILIES[category] || [];
+    const isElite = elitePatterns.some((pattern: string) =>
+      id.includes(pattern.toLowerCase())
+    );
+
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name || model.id.split('/')[1],
+      description: model.description,
+      contextLength: model.context_length,
+      maxOutputTokens: model.max_output_tokens || model.architecture?.['context_length'],
+      pricing: {
+        prompt: model.pricing?.prompt || '0',
+        completion: model.pricing?.completion || '0',
+        request: model.pricing?.request || '0'
+      },
+      isFree,
+      isElite,
+      category
+    };
+  }
+}
+
+/**
+ * Base Adapter implementation
+ */
+class BaseAdapter implements ProviderAdapter {
+  constructor(readonly providerId: string, readonly providerName: string) {}
+
+  async fetchModels(): Promise<ProviderModel[]> {
+    return [];
+  }
+
+  isFreeModel(model: ProviderModel): boolean {
+    return false;
+  }
+
+  normalizeModel(model: ProviderModel): FreeModel {
+    return {
+      id: model.id,
+      provider: this.providerId,
+      name: model.name,
+      pricing: { prompt: '0', completion: '0', request: '0' },
+      isFree: false,
+      isElite: false,
+      category: 'writing'
+    };
+  }
 }
 
 /**
  * Create adapter instance by provider ID
  */
 export function createAdapter(providerId: string): ProviderAdapter {
-  const adapters: Record<string, new () => ProviderAdapter> = {
+  const adapters: Record<string, () => ProviderAdapter> = {
     'openrouter': () => new OpenRouterAdapter(),
     'groq': () => new GroqAdapter(),
     'cerebras': () => new CerebrasAdapter(),

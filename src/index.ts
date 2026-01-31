@@ -7,7 +7,7 @@
  * based on SOTA benchmark performance, enabling zero-cost, zero-latency
  * execution for OpenCode agents.
  *
- * @version 0.1.0
+ * @version 0.2.2
  * @author Phorde
  */
 
@@ -41,7 +41,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
   const { client, directory } = ctx;
 
   console.log('\n🤖 OpenCode Free Fleet - Initializing...');
-  console.log(`   Version: 0.1.0`);
+  console.log(`   Version: 0.2.2`);
   console.log(`   Directory: ${directory}\n`);
 
   // Get config directory
@@ -69,7 +69,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
 
       // Cache results to free-models.json
       const cacheData = {
-        version: '0.1.0',
+        version: '0.2.2',
         timestamp: new Date().toISOString(),
         categories: Object.fromEntries(
           Object.entries(results).map(([cat, res]) => [
@@ -134,7 +134,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
         service: 'free-fleet',
         level: 'info',
         message: 'Free Fleet plugin initialized',
-        extra: { version: '0.1.0', cacheExists }
+        extra: { version: '0.2.2', cacheExists }
       });
 
       // Run discovery if cache doesn't exist
@@ -163,7 +163,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
             optional: true
           }
         },
-        execute: async (args, context) => {
+        execute: async (args: any, context: any) => {
           console.log('🔍 free_fleet_scout: Starting manual discovery...');
 
           const results = await scout.discover();
@@ -260,7 +260,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
             optional: true
           }
         },
-        execute: async (args, context) => {
+        execute: async (args: any, context: any) => {
           console.log(`🏁 free_fleet_router: Starting race for category '${args.category}'`);
 
           try {
@@ -289,7 +289,7 @@ export const FreeFleetPlugin: Plugin = async (ctx: PluginContext): Promise<Plugi
             const models = categoryData.topModels.map((m: any) => `openrouter/${m.id}`);
 
             console.log(`📋 free_fleet_router: Competing with ${models.length} models:`);
-            models.forEach((m, i) => {
+            models.forEach((m: string, i: number) => {
               const modelData = categoryData.topModels.find((d: any) => d.id === m.replace('openrouter/', ''));
               console.log(`  ${i + 1}. ${m}${modelData?.isElite ? ' ⭐ ELITE' : ''}`);
             });

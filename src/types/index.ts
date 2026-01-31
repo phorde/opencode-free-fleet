@@ -22,6 +22,7 @@ export interface FreeModel {
   isFree: boolean;
   isElite: boolean;
   category: ModelCategory;
+  confidence?: number; // Added for compatibility with Scout
 }
 
 /**
@@ -48,6 +49,21 @@ export interface ProviderModel {
   architecture?: any;
   top_provider?: any;
   serverless_free?: boolean;
+  max_context_tokens?: number; // For DeepSeek
+  modality?: string; // For DeepSeek
+  tokenizer?: string; // For DeepSeek
+  context_window?: number; // For Cerebras
+}
+
+/**
+ * Provider Adapter interface
+ */
+export interface ProviderAdapter {
+  readonly providerId: string;
+  readonly providerName: string;
+  fetchModels(): Promise<ProviderModel[]>;
+  isFreeModel(model: ProviderModel): boolean;
+  normalizeModel(model: ProviderModel): FreeModel;
 }
 
 /**

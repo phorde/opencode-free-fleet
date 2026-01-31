@@ -13,8 +13,6 @@
  */
 
 import type {
-  OpenRouterModel,
-  ModelCategory,
   RaceResult,
   RaceConfig
 } from '../types/index.js';

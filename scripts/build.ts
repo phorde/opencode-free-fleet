@@ -1,6 +1,5 @@
 /**
- * Build script for opencode-free-fleet v0.2.0
- * Uses tsc directly to avoid Bun build issues
+ * Build script for opencode-free-fleet
  */
 
 import { spawn } from 'child_process';
@@ -8,30 +7,19 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 async function build() {
-  console.log('🏗️  Building opencode-free-fleet v0.2.0...\n');
+  console.log('🏗️  Building opencode-free-fleet...');
 
   // Ensure dist directory exists
   const distDir = path.resolve('dist');
-  await fs.mkdir(distDir, { recursive: true });
-
+  await fs.rm(distDir, { recursive: true, force: true });
+  
   // Run TypeScript compiler
   const tscPath = path.join('node_modules', '.bin', 'tsc');
 
   console.log(`📦 Running TypeScript compiler...\n`);
 
   return new Promise<void>((resolve, reject) => {
-    const tsc = spawn(tscPath, [
-      '--outDir', distDir,
-      '--rootDir', 'src',
-      '--module', 'ESNext',
-      '--moduleResolution', 'bundler',
-      '--target', 'ESNext',
-      '--strict',
-      '--noEmit',
-      'skipLibCheck',
-      '--esModuleInterop',
-      '--allowSyntheticDefaultImports'
-    ]);
+    const tsc = spawn(tscPath, ['-p', 'tsconfig.dist.json']);
 
     tsc.stdout.on('data', (data) => {
       process.stdout.write(data);
