@@ -1,24 +1,32 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { PersistenceManager } from "../src/core/persistence.js";
-import * as fs from "fs";
-import * as path from "path";
+
+// Mock fs and path at top level
+vi.mock("fs", () => ({
+  existsSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  readFileSync: vi.fn(),
+  renameSync: vi.fn(),
+  unlinkSync: vi.fn(),
+}));
+
+vi.mock("path", () => ({
+  dirname: (p: string) => p.split("/").slice(0, -1).join("/"),
+}));
 
 describe("PersistenceManager", () => {
-  let mockFs: any;
+  const mockFs = {
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    writeFileSync: vi.fn(),
+    readFileSync: vi.fn(),
+    renameSync: vi.fn(),
+    unlinkSync: vi.fn(),
+  } as any;
 
   beforeEach(() => {
-    mockFs = {
-      existsSync: vi.fn(),
-      mkdirSync: vi.fn(),
-      writeFileSync: vi.fn(),
-      readFileSync: vi.fn(),
-      renameSync: vi.fn(),
-      unlinkSync: vi.fn(),
-    };
-    vi.mock("fs", () => ({ ...mockFs }));
-    vi.mock("path", () => ({
-      dirname: (p: string) => p.split("/").slice(0, -1).join("/"),
-    }));
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

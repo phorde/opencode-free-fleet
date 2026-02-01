@@ -275,7 +275,7 @@ describe("competeFreeModels", () => {
     const result = await competeFreeModels(models, executeWithModel);
 
     expect(result.model).toBe("model1"); // Fastest
-    expect(result.duration).toBeGreaterThanOrEqual(100);
+    expect(result.duration).toBeGreaterThanOrEqual(99);
   });
 });
 

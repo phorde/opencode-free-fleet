@@ -1,29 +1,28 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { MetricsEngine, createMetricsEngine } from "../src/core/metrics.js";
-import * as fs from "fs";
-import * as path from "path";
 import type { ModelMetrics } from "../src/types/index.js";
+
+// Mock fs and dependencies at top level
+vi.mock("fs", () => ({
+  existsSync: vi.fn(() => false),
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  readFileSync: vi.fn(() => JSON.stringify({})),
+  renameSync: vi.fn(),
+}));
+
+vi.mock("path", () => ({
+  join: (...args: string[]) => args.join("/"),
+}));
+
+vi.mock("os", () => ({
+  homedir: () => "/home/test",
+}));
 
 describe("MetricsEngine", () => {
   let metricsEngine: MetricsEngine;
-  let mockFs: any;
 
   beforeEach(() => {
-    mockFs = {
-      existsSync: vi.fn().mockReturnValue(false),
-      mkdirSync: vi.fn(),
-      writeFileSync: vi.fn(),
-      readFileSync: vi.fn(),
-      renameSync: vi.fn(),
-    };
-    vi.mock("fs", () => ({ ...mockFs }));
-    vi.mock("path", () => ({
-      join: (...args: string[]) => args.join("/"),
-    }));
-    vi.mock("os", () => ({
-      homedir: () => "/home/test",
-    }));
-
     metricsEngine = createMetricsEngine();
   });
 
